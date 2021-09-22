@@ -14,16 +14,7 @@ describe('AppController', () => {
     appController = app.get<AppController>(AppController);
   });
 
-  describe('root', () => {
-    it('should validate key is a valid EEd25519 key', async () => {
-      expect(await appController.generateChallenge('BADKEY')).toBe(
-        'Invalid Key',
-      );
-      expect(
-        await appController.generateChallenge(
-          'GASYZVCLXYTFQZR7RWT5X4NQ7WDMHO6UVIPZKEIQVB73VUROMFNOROMW',
-        ),
-      ).not.toBe('Invalid Key');
-    });
+  it('should be defined', () => {
+    expect(appController).toBeDefined();
   });
 });
