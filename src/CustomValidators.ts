@@ -5,6 +5,7 @@ import {
 } from 'class-validator';
 import * as StellarSdk from 'stellar-sdk';
 import * as dotenv from 'dotenv';
+const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 dotenv.config();
 
@@ -44,11 +45,26 @@ export class isXDR implements ValidatorConstraintInterface {
 @ValidatorConstraint({ name: 'validatechallenge', async: true })
 export class isValidChallenge implements ValidatorConstraintInterface {
   validate(input: string) {
-    //decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope;
     try {
+      //decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope;
       const xdr = new StellarSdk.Transaction(
         input,
         'Test SDF Network ; September 2015',
+      );
+
+      StellarSdk.Utils.verifyChallengeTxSigners(
+        input,
+        sourcePublicKey,
+        NETWORK_PASSPHRASE,
+        StellarSdk.Utils.gatherTxSigners(
+          xdr,
+          xdr.operations.map((x) => {
+            console.log(x.source);
+            return x.source;
+          }),
+        ),
+        'http://localhost:3000',
+        'http://localhost:3000/auth',
       );
 
       // verify that transaction source account is equal to the Server Account
@@ -105,7 +121,7 @@ export class isValidChallenge implements ValidatorConstraintInterface {
         return false;
       }
 
-      console.log(xdr.signatures);
+      //console.log(xdr.signatures);
     } catch {
       return false;
     }

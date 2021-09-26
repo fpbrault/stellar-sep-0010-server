@@ -24,7 +24,6 @@ export class Challenge {
     description:
       'A Home Domain. Servers that generate tokens for multiple Home Domains can use this parameter to identify which home domain the Client hopes to authenticate with. If not provided by the Client, the Server should assume a default for backwards compatibility with older Clients',
   })
-  @IsFQDN()
   @IsOptional()
   readonly home_domain?: string;
 

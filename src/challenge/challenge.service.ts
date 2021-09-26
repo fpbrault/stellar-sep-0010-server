@@ -21,43 +21,17 @@ type ChallengeResponse =
 @Injectable()
 export class ChallengeService {
   async generateChallenge(challenge: Challenge): Promise<ChallengeResponse> {
-    const sourceAccount = new StellarSdk.Account(sourcePublicKey, '-1');
-    const fee = (await server.fetchBaseFee()).toString();
-
-    const transaction = new StellarSdk.TransactionBuilder(sourceAccount, {
-      fee,
-      networkPassphrase: 'Test SDF Network ; September 2015',
-    })
-      .addOperation(
-        StellarSdk.Operation.manageData({
-          source: challenge.account,
-          name: 'http://localhost:3000/auth',
-          value: randomBytes(48).toString('base64'),
-        }),
-      )
-      .addOperation(
-        StellarSdk.Operation.manageData({
-          source: sourcePublicKey,
-          name: 'web_auth_domain',
-          value: 'http://localhost:3000/',
-        }),
-      )
-      .addOperation(
-        StellarSdk.Operation.manageData({
-          source: challenge.account,
-          name: 'client_domain',
-          value: 'http://client:3000/',
-        }),
-      )
-
-      .setTimeout(900)
-      .build();
-
-    transaction.sign(sourceKeypair);
-    const xdrTransaction = transaction.toEnvelope().toXDR('base64');
+    const transaction = StellarSdk.Utils.buildChallengeTx(
+      sourceKeypair,
+      challenge.account,
+      challenge.home_domain || 'http://localhost:3000',
+      300,
+      'Test SDF Network ; September 2015',
+      'http://localhost:3000/auth',
+    );
 
     return {
-      transaction: xdrTransaction,
+      transaction: transaction,
       network_passphrase: 'Test SDF Network ; September 2015',
     };
   }
