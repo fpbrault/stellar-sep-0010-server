@@ -5,13 +5,15 @@ import {
 } from 'class-validator';
 import * as StellarSdk from 'stellar-sdk';
 import * as dotenv from 'dotenv';
-const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 dotenv.config();
 
 const sourceSecretKey = process.env.SERVER_PRIVATE_KEY;
 const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
 const sourcePublicKey = sourceKeypair.publicKey();
+const HOME_DOMAIN = process.env.HOME_DOMAIN;
+const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 @ValidatorConstraint({ name: 'ed25519key', async: true })
 export class isEd25519 implements ValidatorConstraintInterface {
@@ -44,84 +46,15 @@ export class isXDR implements ValidatorConstraintInterface {
 
 @ValidatorConstraint({ name: 'validatechallenge', async: true })
 export class isValidChallenge implements ValidatorConstraintInterface {
-  validate(input: string) {
+  async validate(input: string) {
     try {
-      //decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope;
-      const xdr = new StellarSdk.Transaction(
-        input,
-        'Test SDF Network ; September 2015',
-      );
-
-      StellarSdk.Utils.verifyChallengeTxSigners(
+      StellarSdk.Utils.readChallengeTx(
         input,
         sourcePublicKey,
         NETWORK_PASSPHRASE,
-        StellarSdk.Utils.gatherTxSigners(
-          xdr,
-          xdr.operations.map((x) => {
-            console.log(x.source);
-            return x.source;
-          }),
-        ),
-        'http://localhost:3000',
-        'http://localhost:3000/auth',
+        HOME_DOMAIN,
+        HOME_DOMAIN + '/auth',
       );
-
-      // verify that transaction source account is equal to the Server Account
-      if (xdr.source.toString() !== sourcePublicKey) {
-        return false;
-      }
-      // verify that transaction has time bounds set;
-      if (!xdr.timeBounds) {
-        return false;
-      }
-      // verify that current time is between the minimum and maximum bounds;
-      if (
-        parseInt(new Date().valueOf().toString().slice(0, -3), 10) -
-          parseInt(xdr.timeBounds.maxTime, 10) >
-        0
-      ) {
-        return false;
-      }
-
-      // verify that transaction contains at least one operation;
-      if (xdr.operations.length === 0) {
-        return false;
-      }
-
-      /* verify that transaction's first operation:
-       is a Manage Data operation
-       has a non-null source account */
-      if (
-        xdr.operations[0].type !== 'manageData' ||
-        xdr.operations[0].source === null
-      ) {
-        return false;
-      }
-
-      // TODO: verify that transaction envelope has a correct signature by the Server Account
-
-      // TODO: if the first operation's source account exists:
-      // TODO: verify that the remaining signature count is one or more;
-      // TODO: verify that remaining signatures on the transaction are signers of the Client Account
-      // TODO: verify that remaining signatures are correct;
-      // TODO: verify that remaining signatures provide weight that meets the required threshold(s), if any;
-
-      // TODO: if the first operation's source account does not exist
-      // TODO: verify that remaining signature count is one;
-      // TODO: verify that remaining signature is correct for the master key of the Client Account
-
-      // TODO: if the transaction contains a Manage Data operation with the key client_domain
-      // TODO: verify that the transaction was signed by the source account of the Manage Data operation
-
-      // TODO: verify that transaction containing additional Manage Data operations have their source account set to the Server Account;
-
-      // verify that transaction sequenceNumber is equal to zero;
-      if (xdr.sequence !== '0') {
-        return false;
-      }
-
-      //console.log(xdr.signatures);
     } catch {
       return false;
     }
@@ -131,5 +64,54 @@ export class isValidChallenge implements ValidatorConstraintInterface {
 
   defaultMessage() {
     return 'Transaction is not a valid challenge transaction!';
+  }
+}
+
+@ValidatorConstraint({ name: 'validatesignatures', async: true })
+export class hasValidSignatures implements ValidatorConstraintInterface {
+  async validate(input: string) {
+    try {
+      // Decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope;
+      const xdr = new StellarSdk.Transaction(input, NETWORK_PASSPHRASE);
+
+      // Retrieve the Client Account to check thresholds and signature weights.
+      const clientAccount = await server.loadAccount(xdr.operations[0].source);
+
+      // Check if high_threshold is higher than 0. If it is, verify that the signatures provide weight that meets this threshold.
+      if (clientAccount.thresholds.high_threshold > 0) {
+        StellarSdk.Utils.verifyChallengeTxSigners(
+          input,
+          sourcePublicKey,
+          NETWORK_PASSPHRASE,
+          StellarSdk.Utils.gatherTxSigners(
+            xdr,
+            xdr.operations.map((x) => {
+              console.log(x.source);
+              return x.source;
+            }),
+          ),
+          HOME_DOMAIN,
+          HOME_DOMAIN + '/auth',
+        );
+      } else {
+        StellarSdk.Utils.verifyChallengeTxThreshold(
+          input,
+          sourcePublicKey,
+          NETWORK_PASSPHRASE,
+          clientAccount.thresholds.high_threshold,
+          clientAccount.signers,
+          HOME_DOMAIN,
+          HOME_DOMAIN + '/auth',
+        );
+      }
+    } catch {
+      return false;
+    }
+
+    return true;
+  }
+
+  defaultMessage() {
+    return 'Signatures are not valid or do not meet the required threshold!';
   }
 }

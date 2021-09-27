@@ -1,6 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Validate } from 'class-validator';
-import { isValidChallenge, isXDR } from './CustomValidators';
+import {
+  hasValidSignatures,
+  isValidChallenge,
+  isXDR,
+} from './CustomValidators';
 
 export class Token {
   @ApiProperty({
@@ -11,7 +15,10 @@ export class Token {
       'Transaction is not a valid base64-encoded XDR transaction enveloppe!',
   })
   @Validate(isValidChallenge, {
-    message: 'Transaction is not a valid challenge!',
+    message: 'Transaction is not a valid challenge transaction!',
+  })
+  @Validate(hasValidSignatures, {
+    message: 'Signatures are not valid or do not meet the required threshold!',
   })
   readonly transaction: string;
 }

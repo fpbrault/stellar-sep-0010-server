@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Challenge } from '../challenge';
 import * as StellarSdk from 'stellar-sdk';
-import { randomBytes } from 'crypto';
 import * as dotenv from 'dotenv';
-const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
 
 dotenv.config();
 
 const sourceSecretKey = process.env.SERVER_PRIVATE_KEY;
 const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
-const sourcePublicKey = sourceKeypair.publicKey();
+const HOME_DOMAIN = process.env.HOME_DOMAIN;
+const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 type ChallengeResponse =
   | {
@@ -21,18 +20,19 @@ type ChallengeResponse =
 @Injectable()
 export class ChallengeService {
   async generateChallenge(challenge: Challenge): Promise<ChallengeResponse> {
+    // TODO: Add memo support once js-stellar-sdk supports it officially (only beta at the moment https://github.com/stellar/js-stellar-sdk/releases/tag/v9.0.0-beta.1)
     const transaction = StellarSdk.Utils.buildChallengeTx(
       sourceKeypair,
       challenge.account,
-      challenge.home_domain || 'http://localhost:3000',
+      challenge.home_domain || HOME_DOMAIN,
       300,
-      'Test SDF Network ; September 2015',
-      'http://localhost:3000/auth',
+      NETWORK_PASSPHRASE,
+      HOME_DOMAIN + '/auth',
     );
 
     return {
       transaction: transaction,
-      network_passphrase: 'Test SDF Network ; September 2015',
+      network_passphrase: NETWORK_PASSPHRASE,
     };
   }
 }
