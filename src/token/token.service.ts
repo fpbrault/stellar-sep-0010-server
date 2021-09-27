@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { Token } from '../token';
 import * as StellarSdk from 'stellar-sdk';
 import * as dotenv from 'dotenv';
+import * as jwt from 'jsonwebtoken';
 
 dotenv.config();
 
-const sourceSecretKey = process.env.SERVER_PRIVATE_KEY;
-const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
-const sourcePublicKey = sourceKeypair.publicKey();
+const HOME_DOMAIN = process.env.HOME_DOMAIN;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 type TokenResponse =
   | {
@@ -23,8 +23,16 @@ export class TokenService {
       'Test SDF Network ; September 2015',
     );
 
+    const payload = {
+      iss: HOME_DOMAIN + '/auth',
+      sub: xdr.operations[0].source,
+      iat: parseInt(xdr.timeBounds.minTime, 10),
+      exp: parseInt(xdr.timeBounds.minTime, 10) + 86400,
+    };
+    console.log(HOME_DOMAIN);
+    console.log(JWT_SECRET);
     return {
-      token: xdr.toXDR(),
+      token: jwt.sign(payload, JWT_SECRET),
     };
   }
 }
