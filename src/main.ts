@@ -23,6 +23,7 @@ async function bootstrap() {
     .setDescription(
       'This is the API documentation for the SEP-0010 Server implementation',
     )
+    .addBearerAuth()
     .setVersion('1.0')
     .build();
   const document = SwaggerModule.createDocument(app, config);

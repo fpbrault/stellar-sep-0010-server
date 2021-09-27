@@ -15,6 +15,12 @@ type TokenResponse =
     }
   | string;
 
+type DecodedTokenResponse =
+  | {
+      token: string | jwt.JwtPayload;
+    }
+  | string;
+
 @Injectable()
 export class TokenService {
   async generateToken(token: Token): Promise<TokenResponse> {
@@ -29,10 +35,15 @@ export class TokenService {
       iat: parseInt(xdr.timeBounds.minTime, 10),
       exp: parseInt(xdr.timeBounds.minTime, 10) + 86400,
     };
-    console.log(HOME_DOMAIN);
-    console.log(JWT_SECRET);
+
     return {
       token: jwt.sign(payload, JWT_SECRET),
+    };
+  }
+  async decodeToken(token: Token): Promise<DecodedTokenResponse> {
+    const decodedToken = jwt.decode(token.toString());
+    return {
+      token: decodedToken,
     };
   }
 }
