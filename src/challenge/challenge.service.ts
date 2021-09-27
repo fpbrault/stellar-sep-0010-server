@@ -19,8 +19,16 @@ type ChallengeResponse =
 
 @Injectable()
 export class ChallengeService {
+  /**
+   * generateChallenge generates a SEP-0010 challenge.
+   *
+   * @param {Challenge} challenge
+   * @return {*}  {Promise<ChallengeResponse>}
+   * @memberof ChallengeService
+   */
   async generateChallenge(challenge: Challenge): Promise<ChallengeResponse> {
     // TODO: Add memo support once js-stellar-sdk supports it officially (only beta at the moment https://github.com/stellar/js-stellar-sdk/releases/tag/v9.0.0-beta.1)
+    // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
     const transaction = StellarSdk.Utils.buildChallengeTx(
       sourceKeypair,
       challenge.account,
