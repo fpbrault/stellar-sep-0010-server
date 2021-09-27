@@ -86,7 +86,6 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
           StellarSdk.Utils.gatherTxSigners(
             xdr,
             xdr.operations.map((x) => {
-              console.log(x.source);
               return x.source;
             }),
           ),
