@@ -9,11 +9,6 @@ StellarSdk.Networks.TESTNET;
 
 dotenv.config();
 
-const sourceSecretKey = process.env.SERVER_PRIVATE_KEY;
-
-const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
-const sourcePublicKey = sourceKeypair.publicKey();
-
 type ChallengeResponse =
   | {
       transaction: string;

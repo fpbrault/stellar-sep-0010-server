@@ -1,12 +1,18 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AuthController } from './auth.controller';
+import { ChallengeService } from '../challenge/challenge.service';
+import { TokenService } from '../token/token.service';
+import { JwtStrategy } from './jwt.strategy';
+import { PassportModule } from '@nestjs/passport';
 
 describe('AuthController', () => {
   let controller: AuthController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
+      imports: [PassportModule],
       controllers: [AuthController],
+      providers: [ChallengeService, TokenService, JwtStrategy],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
@@ -17,15 +23,18 @@ describe('AuthController', () => {
   });
 
   describe('root', () => {
-    it('should validate key is a valid EEd25519 key', async () => {
-      expect(await controller.generateChallenge({ account: 'BADKEY' })).toBe(
-        'Invalid Key',
-      );
-      expect(
-        await controller.generateChallenge({
-          account: 'GASYZVCLXYTFQZR7RWT5X4NQ7WDMHO6UVIPZKEIQVB73VUROMFNOROMW',
-        }),
-      ).not.toBe('Invalid Key');
+    it('throws an error when account is invalid', async () => {
+      expect.assertions(2);
+
+      const challenge = {
+        account: 'INVALIDACCOUNTSTRING',
+      };
+      try {
+        await controller.generateChallenge(challenge);
+      } catch (e) {
+        expect(e).toBeInstanceOf(Error);
+        expect(e.message).toBe('Source address is invalid');
+      }
     });
   });
 });

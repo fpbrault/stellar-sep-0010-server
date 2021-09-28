@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Challenge } from '../challenge';
 import * as StellarSdk from 'stellar-sdk';
 import * as dotenv from 'dotenv';
@@ -12,7 +12,7 @@ const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
 const HOME_DOMAIN = process.env.HOME_DOMAIN;
 const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
-type ChallengeResponse =
+export type ChallengeResponse =
   | {
       transaction: string;
       network_passphrase: string;
@@ -22,15 +22,12 @@ type ChallengeResponse =
 @Injectable()
 export class ChallengeService {
   private readonly logger = new Logger(ChallengeService.name);
-  async generateChallenge(challenge: Challenge): Promise<ChallengeResponse> {
-    let client_domain_signing_key;
+
+  async getSigningKey(client_domain) {
     try {
-      client_domain_signing_key = challenge.client_domain
+      const client_domain_signing_key = client_domain
         ? await fetch(
-            new URL(
-              '/.well-known/stellar.toml',
-              'https://' + challenge.client_domain,
-            ),
+            new URL('/.well-known/stellar.toml', 'https://' + client_domain),
             {
               headers: {
                 Accept: 'text/plain',
@@ -39,17 +36,25 @@ export class ChallengeService {
               method: 'GET',
             },
           )
-            .then((response) => response.text())
-            .then((data) => {
+            .then((response: { text: () => any }) => response.text())
+            .then((data: string) => {
               if (toml.parse(data).SIGNING_KEY) {
                 return toml.parse(data).SIGNING_KEY;
               }
-              throw new Error();
             })
         : null;
+      return client_domain_signing_key;
     } catch {
-      return "Error: unable to fetch 'client_domain' SIGNING_KEY";
+      throw new BadRequestException(
+        "Unable to fetch 'client_domain' SIGNING_KEY",
+      );
     }
+  }
+
+  async generateChallenge(challenge: Challenge): Promise<ChallengeResponse> {
+    const client_domain_signing_key = await this.getSigningKey(
+      challenge.client_domain,
+    );
 
     this.logger.debug('home_domain:' + challenge.home_domain);
     this.logger.debug('client_account:' + challenge.account);

@@ -40,7 +40,7 @@ export class TokenService {
       token: jwt.sign(payload, JWT_SECRET),
     };
   }
-  async decodeToken(token: Token): Promise<DecodedTokenResponse> {
+  async decodeToken(token: TokenResponse): Promise<DecodedTokenResponse> {
     const decodedToken = jwt.decode(token.toString());
     return {
       token: decodedToken,
