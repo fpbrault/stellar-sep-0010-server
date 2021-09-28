@@ -31,7 +31,6 @@ describe('TokenService', () => {
     const encodedToken =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJodHRwczovL2V4YW1wbGUuY29tL2F1dGgiLCJzdWIiOiJHQkw2RVlKSklHMllUNUZYM1ZHVzdBV0pNNlJISllHWUQ0UjQzS0xaV0Y1S0FRWDdNNFAySVRWSSIsImlhdCI6IjE1MTYyMzkwMjIiLCJleHAiOiIxNTE2MzI1NDIyIn0.jDm8Hlj4gD35-fqIhm8Lbl7G0A7GCxtA8zE88zFKYv8';
     const tokenResponse = await tokenService.decodeToken(encodedToken);
-    console.log(tokenResponse);
     expect(tokenResponse).toBeInstanceOf(Object);
     expect(tokenResponse).toMatchObject({
       token: expect.objectContaining({

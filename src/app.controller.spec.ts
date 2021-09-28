@@ -30,7 +30,6 @@ describe('AppController', () => {
       },
     };
     const tokenResponse = await appController.decodeToken(encodedToken);
-    console.log(tokenResponse);
     expect(tokenResponse).toBeInstanceOf(Object);
     expect(tokenResponse).toMatchObject({
       token: expect.objectContaining({
