@@ -6,8 +6,13 @@ import * as jwt from 'jsonwebtoken';
 
 dotenv.config();
 
-const HOME_DOMAIN = process.env.HOME_DOMAIN;
-const JWT_SECRET = process.env.JWT_SECRET;
+/** Default Home Domain
+ * @type {string}  */
+const HOME_DOMAIN: string = process.env.HOME_DOMAIN;
+
+/** Secret key used for JWT generation
+ * @type {string}  */
+const JWT_SECRET: string = process.env.JWT_SECRET;
 
 type TokenResponse =
   | {
@@ -15,14 +20,27 @@ type TokenResponse =
     }
   | string;
 
-type DecodedTokenResponse =
+export type DecodedTokenResponse =
   | {
       token: string | jwt.JwtPayload;
     }
   | string;
 
+/**
+ * Handles JWT token generation and decoding
+ *
+ * @export
+ * @class TokenService
+ */
 @Injectable()
 export class TokenService {
+  /**
+   * generateToken takes a (previously validated) challenge XDR and returns a JTW token.
+   *
+   * @param {Token} token
+   * @return {Promise<TokenResponse>}
+   * @memberof TokenService
+   */
   async generateToken(token: Token): Promise<TokenResponse> {
     const xdr = new StellarSdk.Transaction(
       token.transaction,

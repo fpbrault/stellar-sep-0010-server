@@ -7,9 +7,19 @@ import * as toml from 'toml';
 
 dotenv.config();
 
-const sourceSecretKey = process.env.SERVER_PRIVATE_KEY;
-const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
-const HOME_DOMAIN = process.env.HOME_DOMAIN;
+/** Private Key used by the server
+ * @type {string}  */
+const sourceSecretKey: string = process.env.SERVER_PRIVATE_KEY;
+/** Keypair of the Server Account
+ * @type {StellarSdk.Keypair}
+ * */
+const sourceKeypair: StellarSdk.Keypair =
+  StellarSdk.Keypair.fromSecret(sourceSecretKey);
+/** Default Home Domain
+ * @type {string}  */
+const HOME_DOMAIN: string = process.env.HOME_DOMAIN;
+/** Network Passphrase
+ * @type {string}  */
 const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 export type ChallengeResponse =
@@ -19,11 +29,26 @@ export type ChallengeResponse =
     }
   | string;
 
+/**
+ * Handles SEP-0010 challenge generation
+ *
+ * @export
+ * @class ChallengeService
+ */
 @Injectable()
 export class ChallengeService {
   private readonly logger = new Logger(ChallengeService.name);
 
-  async getSigningKey(client_domain) {
+  /**
+   * Returns the public key of a client domain if it exists
+   *
+   * @param {string} client_domain
+   * @return {Promise<StellarSdk.xdr.PublicKey>}
+   * @memberof ChallengeService
+   */
+  async getSigningKey(
+    client_domain: string,
+  ): Promise<StellarSdk.xdr.PublicKey> {
     try {
       const client_domain_signing_key = client_domain
         ? await fetch(
@@ -51,6 +76,13 @@ export class ChallengeService {
     }
   }
 
+  /**
+   * Generates a SEP-0010 challenge
+   *
+   * @param {Challenge} challenge
+   * @return {Promise<ChallengeResponse>}
+   * @memberof ChallengeService
+   */
   async generateChallenge(challenge: Challenge): Promise<ChallengeResponse> {
     const client_domain_signing_key = await this.getSigningKey(
       challenge.client_domain,

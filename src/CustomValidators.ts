@@ -8,27 +8,75 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-const sourceSecretKey = process.env.SERVER_PRIVATE_KEY;
-const sourceKeypair = StellarSdk.Keypair.fromSecret(sourceSecretKey);
-const sourcePublicKey = sourceKeypair.publicKey();
-const HOME_DOMAIN = process.env.HOME_DOMAIN;
+/** Private Key used by the server
+ * @type {string}  */
+const sourceSecretKey: string = process.env.SERVER_PRIVATE_KEY;
+/** Keypair of the Server Account
+ * @type {StellarSdk.Keypair}
+ * */
+const sourceKeypair: StellarSdk.Keypair =
+  StellarSdk.Keypair.fromSecret(sourceSecretKey);
+/** Default Home Domain
+ * @type {string}  */
+const HOME_DOMAIN: string = process.env.HOME_DOMAIN;
+/** Network Passphrase
+ * @type {string}  */
 const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
-const server = new StellarSdk.Server('https://horizon-testnet.stellar.org');
+/** URL of the horizon server
+ * @type {StellarSdk.Server}  */
+const server: StellarSdk.Server = new StellarSdk.Server(
+  'https://horizon-testnet.stellar.org',
+);
 
-@ValidatorConstraint({ name: 'ed25519key', async: true })
+/**
+ * Validates that the account public key is a valid Ed25519 key
+ *
+ * @export
+ * @class isEd25519
+ * @implements {ValidatorConstraintInterface}
+ */
+@ValidatorConstraint({ name: 'ed25519key', async: false })
 export class isEd25519 implements ValidatorConstraintInterface {
-  validate(value: string) {
+  /**
+   * Validation
+   *
+   * @param {string} value
+   * @return {boolean}
+   * @memberof isEd25519
+   */
+  validate(value: string): boolean {
     return StellarSdk.StrKey.isValidEd25519PublicKey(value);
   }
 
-  defaultMessage() {
+  /**
+   * Default validation error message
+   *
+   * @return {string}
+   * @memberof hasValidSignatures
+   */
+  defaultMessage(): string {
     return 'Key is not a valid Ed25519 Public Key!';
   }
 }
 
-@ValidatorConstraint({ name: 'xdrtransaction', async: true })
+/**
+ * Validates that the transaction is a valid XDR transaction envelope
+ *
+ * @export
+ * @class isXDR
+ * @implements {ValidatorConstraintInterface}
+ */
+@ValidatorConstraint({ name: 'xdrtransaction', async: false })
 export class isXDR implements ValidatorConstraintInterface {
-  validate(input: Buffer, validationArguments: ValidationArguments) {
+  /**
+   * Validation
+   *
+   * @param {Buffer} input
+   * @param {ValidationArguments} validationArguments
+   * @return {boolean}
+   * @memberof isXDR
+   */
+  validate(input: Buffer, validationArguments: ValidationArguments): boolean {
     try {
       return StellarSdk.xdr.TransactionEnvelope.validateXDR(
         input,
@@ -39,18 +87,38 @@ export class isXDR implements ValidatorConstraintInterface {
     }
   }
 
-  defaultMessage() {
+  /**
+   * Default validation error message
+   *
+   * @return {string}
+   * @memberof hasValidSignatures
+   */
+  defaultMessage(): string {
     return 'Transaction is not a valid XDR transaction!';
   }
 }
 
+/**
+ * Validates that the challenge transaction contains the expected operations and other parameters
+ *
+ * @export
+ * @class isValidChallenge
+ * @implements {ValidatorConstraintInterface}
+ */
 @ValidatorConstraint({ name: 'validatechallenge', async: true })
 export class isValidChallenge implements ValidatorConstraintInterface {
-  async validate(input: string) {
+  /**
+   * Validation
+   *
+   * @param {string} input
+   * @return {boolean}
+   * @memberof isValidChallenge
+   */
+  async validate(input: string): Promise<boolean> {
     try {
       StellarSdk.Utils.readChallengeTx(
         input,
-        sourcePublicKey,
+        sourceKeypair.publicKey(),
         NETWORK_PASSPHRASE,
         HOME_DOMAIN,
         HOME_DOMAIN + '/auth',
@@ -62,14 +130,34 @@ export class isValidChallenge implements ValidatorConstraintInterface {
     return true;
   }
 
-  defaultMessage() {
+  /**
+   * Default validation error message
+   *
+   * @return {string}
+   * @memberof hasValidSignatures
+   */
+  defaultMessage(): string {
     return 'Transaction is not a valid challenge transaction!';
   }
 }
 
+/**
+ * Validates that the required signatures are present on the transaction
+ *
+ * @export
+ * @class hasValidSignatures
+ * @implements {ValidatorConstraintInterface}
+ */
 @ValidatorConstraint({ name: 'validatesignatures', async: true })
 export class hasValidSignatures implements ValidatorConstraintInterface {
-  async validate(input: string) {
+  /**
+   * Validation
+   *
+   * @param {string} input
+   * @return {boolean}
+   * @memberof hasValidSignatures
+   */
+  async validate(input: string): Promise<boolean> {
     try {
       // Decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope;
       const xdr = new StellarSdk.Transaction(input, NETWORK_PASSPHRASE);
@@ -81,7 +169,7 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       if (clientAccount.thresholds.high_threshold > 0) {
         StellarSdk.Utils.verifyChallengeTxSigners(
           input,
-          sourcePublicKey,
+          sourceKeypair.publicKey(),
           NETWORK_PASSPHRASE,
           StellarSdk.Utils.gatherTxSigners(
             xdr,
@@ -95,7 +183,7 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       } else {
         StellarSdk.Utils.verifyChallengeTxThreshold(
           input,
-          sourcePublicKey,
+          sourceKeypair.publicKey(),
           NETWORK_PASSPHRASE,
           clientAccount.thresholds.high_threshold,
           clientAccount.signers,
@@ -110,7 +198,13 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
     return true;
   }
 
-  defaultMessage() {
+  /**
+   * Default validation error message
+   *
+   * @return {string}
+   * @memberof hasValidSignatures
+   */
+  defaultMessage(): string {
     return 'Signatures are not valid or do not meet the required threshold!';
   }
 }

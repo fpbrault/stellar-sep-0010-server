@@ -12,6 +12,12 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 const HOME_DOMAIN = new URL(process.env.HOME_DOMAIN);
 
+/**
+ * SEP-0010 Challenge Request Parameters
+ *
+ * @export
+ * @class Challenge
+ */
 export class Challenge {
   @ApiProperty({
     description:

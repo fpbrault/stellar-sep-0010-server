@@ -3,8 +3,8 @@
   "version": "0.0.1",
   "description": "JavaScript SEP-0010 Server Reference Implementation",
   "author": {
-    "name" : "Felix Perron-Brault",
-    "email" : "fpbrault@gmail.com"
+    "name": "Felix Perron-Brault",
+    "email": "fpbrault@gmail.com"
   },
   "private": true,
   "repository": {
@@ -53,6 +53,7 @@
     "toml": "^3.0.0"
   },
   "devDependencies": {
+    "@compodoc/compodoc": "^1.1.15",
     "@nestjs/cli": "^8.0.0",
     "@nestjs/schematics": "^8.0.0",
     "@nestjs/testing": "^8.0.0",

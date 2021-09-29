@@ -6,6 +6,12 @@ import {
   isXDR,
 } from './CustomValidators';
 
+/**
+ * SEP-0010 Token Request Parameters
+ *
+ * @export
+ * @class Token
+ */
 export class Token {
   @ApiProperty({
     description: 'The base64 encoded signed challenge transaction XDR',

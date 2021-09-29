@@ -29,6 +29,13 @@ export class AuthController {
     private readonly tokenService: TokenService,
   ) {}
 
+  /**
+   * Generates a SEP-0010 challenge
+   *
+   * @param {Challenge} challenge
+   * @return {Promise<ChallengeResponse>}
+   * @memberof AuthController
+   */
   @Get()
   async generateChallenge(
     @Query() challenge: Challenge,
@@ -36,6 +43,13 @@ export class AuthController {
     return this.challengeService.generateChallenge(challenge);
   }
 
+  /**
+   *  generateToken takes a challenge XDR and returns a JTW token.
+   *
+   * @param {Token} token
+   * @return {Promise<TokenResponse>}
+   * @memberof AuthController
+   */
   @Post()
   async generateToken(@Body() token: Token): Promise<TokenResponse> {
     return this.tokenService.generateToken(token);
