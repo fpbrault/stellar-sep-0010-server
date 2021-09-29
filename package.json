@@ -1,9 +1,17 @@
 {
   "name": "stellar-sep-0010-server",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "JavaScript SEP-0010 Server Reference Implementation",
+  "author": {
+    "name" : "Felix Perron-Brault",
+    "email" : "fpbrault@gmail.com"
+  },
   "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fpbrault/stellar-sep-0010-server.git"
+  },
+  "homepage": "https://github.com/fpbrault/stellar-sep-0010-server",
   "license": "MIT",
   "scripts": {
     "prebuild": "rimraf dist",
