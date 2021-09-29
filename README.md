@@ -1,7 +1,7 @@
 <h1 align="center">Welcome to stellar-sep-0010-server 👋</h1>
 <p>
   <img alt="Version" src="https://img.shields.io/badge/version-0.0.1-blue.svg?cacheSeconds=2592000" />
-  <a href="https://github.com/fpbrault/stellar-sep-0010-server#readme" target="_blank">
+  <a href="https://fpbrault.github.io/stellar-sep-0010-server/index.html" target="_blank">
     <img alt="Documentation" src="https://img.shields.io/badge/documentation-yes-brightgreen.svg" />
   </a>
   <a href="https://github.com/fpbrault/stellar-sep-0010-server/graphs/commit-activity" target="_blank">
