@@ -2,8 +2,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
+import * as StellarSdk from 'stellar-sdk';
 import { AppModule } from './../src/app.module';
-import { AnyFilesInterceptor } from '@nestjs/platform-express';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
@@ -23,14 +23,38 @@ describe('AppController (e2e)', () => {
 
   describe('Authentication', () => {
     let jwtToken: string;
+    const keypair = StellarSdk.Keypair.random();
 
     describe('AuthModule', () => {
+      it('generates a valid SEP-0010 challenge transaction', async () => {
+        const response = await request(app.getHttpServer())
+          .get(
+            '/auth?account=' +
+              keypair.publicKey() +
+              '&home_domain=stellar.beign.es&client_domain=stellar.beign.es',
+          )
+          .expect(200);
+
+        const data = response.body;
+        expect(data).toMatchObject({
+          network_passphrase: expect.any(String),
+          transaction: expect.any(String),
+        });
+      });
       it('authenticates user with valid transaction and provides a jwt token', async () => {
+        const transaction = StellarSdk.Utils.buildChallengeTx(
+          keypair,
+          keypair.publicKey(),
+          'stellar.beign.es',
+          300,
+          StellarSdk.Networks.TESTNET,
+          'stellar.beign.es/auth',
+        );
+
         const response = await request(app.getHttpServer())
           .post('/auth')
           .send({
-            transaction:
-              'AAAAAgAAAACgGsgRTcnGCG4fxZ0FqA74qH1M5V23COm4kwttDsWcawAAAMgAAAAAAAAAAAAAAAEAAAAAYVOLaQAAAABhU4yVAAAAAAAAAAIAAAABAAAAAFfiYSlBtYn0t91Nb4LJZ6J04NgfI82pebF6oEL/Zx+kAAAACgAAAB1odHRwczovL3N0ZWxsYXIuYmVpZ24uZXMgYXV0aAAAAAAAAAEAAABAamo4d0ZwYU90ZVErMGhUNm1XYURqQ2NCcGhXYk5PQjh4aXZ0bjlFUUZJR2REcDhQZVZYWktoZDZkOWozUVZEQQAAAAEAAAAAoBrIEU3JxghuH8WdBagO+Kh9TOVdtwjpuJMLbQ7FnGsAAAAKAAAAD3dlYl9hdXRoX2RvbWFpbgAAAAABAAAAHWh0dHBzOi8vc3RlbGxhci5iZWlnbi5lcy9hdXRoAAAAAAAAAAAAAAEOxZxrAAAAQPaeElhJldFothPDubAktxUBiyfGcbeONXOXq7x3BAYff8s+JaFksc2ajdKTsp9I7gvHAuhJllXM9zLPBhKaIwI=',
+            transaction: transaction,
           })
           .expect(201);
 
@@ -53,7 +77,7 @@ describe('AppController (e2e)', () => {
         expect(data).toMatchObject({
           token: expect.objectContaining({
             iss: 'https://stellar.beign.es/auth',
-            sub: 'GBL6EYJJIG2YT5FX3VGW7AWJM6RHJYGYD4R43KLZWF5KAQX7M4P2ITVI',
+            sub: keypair.publicKey(),
             exp: expect.any(Number),
             iat: expect.any(Number),
           }),

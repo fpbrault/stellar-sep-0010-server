@@ -54,7 +54,7 @@ export class TokenService {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const clientAccountID: string = operation.source!;
     const payload = {
-      iss: this.configService.get('homeDomain') + '/auth',
+      iss: 'https://' + this.configService.get('homeDomain') + '/auth',
       sub:
         transaction.memo.type !== MemoNone
           ? clientAccountID + ':' + transaction.memo.value

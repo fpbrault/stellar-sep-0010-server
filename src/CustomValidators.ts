@@ -192,6 +192,7 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       const xdr = new StellarSdk.Transaction(
         input,
         this.configService.get('networkPassphrase'),
+        true,
       );
 
       const server: StellarSdk.Server = new StellarSdk.Server(
@@ -199,6 +200,8 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       );
       // Retrieve the Client Account to check thresholds and signature weights.
       const clientAccount = await server.loadAccount(xdr.operations[0].source);
+
+      const homeDomain = this.configService.get('homeDomain');
 
       // Check if high_threshold is higher than 0. If it is, verify that the signatures provide weight that meets this threshold.
       if (clientAccount.thresholds.high_threshold > 0) {
@@ -212,8 +215,9 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
               return x.source;
             }),
           ),
-          this.configService.get('homeDomain'),
-          this.configService.get('homeDomain') + '/auth',
+
+          `${homeDomain}`,
+          `${homeDomain}` + '/auth',
         );
       } else {
         StellarSdk.Utils.verifyChallengeTxThreshold(
@@ -222,8 +226,8 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
           this.configService.get('networkPassphrase'),
           clientAccount.thresholds.high_threshold,
           clientAccount.signers,
-          this.configService.get('homeDomain'),
-          this.configService.get('homeDomain') + '/auth',
+          `${homeDomain}`,
+          `${homeDomain}` + '/auth',
         );
       }
     } catch (error) {

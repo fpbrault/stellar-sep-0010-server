@@ -4,6 +4,8 @@ import { ChallengeService } from '../challenge/challenge.service';
 import { TokenService } from '../token/token.service';
 import { JwtStrategy } from './jwt.strategy';
 import { PassportModule } from '@nestjs/passport';
+import { ConfigService } from '@nestjs/config';
+import { Keypair } from 'stellar-sdk';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -12,10 +14,29 @@ describe('AuthController', () => {
     const module: TestingModule = await Test.createTestingModule({
       imports: [PassportModule],
       controllers: [AuthController],
-      providers: [ChallengeService, TokenService, JwtStrategy],
+      providers: [
+        ChallengeService,
+        TokenService,
+        JwtStrategy,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'source.keypair') {
+                return Keypair.random();
+              }
+              if (key === 'jwtSecret') {
+                return 'thisisthesecret';
+              }
+              return null;
+            }),
+          },
+        },
+      ],
     }).compile();
 
     controller = module.get<AuthController>(AuthController);
+    //config = module.get<ConfigService>(ConfigService);
   });
 
   it('should be defined', () => {

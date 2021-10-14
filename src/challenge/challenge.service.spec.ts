@@ -1,13 +1,32 @@
 import { BadRequestException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { ChallengeService } from './challenge.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Keypair, Networks } from 'stellar-sdk';
 
 describe('ChallengeService', () => {
   let challengeService: ChallengeService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [ChallengeService],
+      imports: [ConfigModule.forRoot()],
+      providers: [
+        ChallengeService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'source.keypair') {
+                return Keypair.random();
+              }
+              if (key === 'networkPassphrase') {
+                return Networks.TESTNET;
+              }
+              return null;
+            }),
+          },
+        },
+      ],
     }).compile();
 
     challengeService = module.get<ChallengeService>(ChallengeService);

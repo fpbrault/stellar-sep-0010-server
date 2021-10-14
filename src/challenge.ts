@@ -12,7 +12,7 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 // TODO: get home domain from config module
-const HOME_DOMAIN = new URL(process.env.HOME_DOMAIN);
+const HOME_DOMAIN = process.env.HOME_DOMAIN;
 
 /**
  * SEP-0010 Challenge Request Parameters
@@ -46,7 +46,7 @@ export class Challenge {
     description:
       'A Home Domain. Servers that generate tokens for multiple Home Domains can use this parameter to identify which home domain the Client hopes to authenticate with. If not provided by the Client, the Server should assume a default for backwards compatibility with older Clients',
   })
-  @IsIn([HOME_DOMAIN.hostname])
+  @IsIn([HOME_DOMAIN])
   @IsFQDN()
   @IsOptional()
   readonly home_domain?: string;

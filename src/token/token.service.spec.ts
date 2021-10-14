@@ -1,12 +1,31 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { TokenService } from './token.service';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { Networks } from 'stellar-sdk';
 
 describe('TokenService', () => {
   let tokenService: TokenService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [TokenService],
+      imports: [ConfigModule.forRoot()],
+      providers: [
+        TokenService,
+        {
+          provide: ConfigService,
+          useValue: {
+            get: jest.fn((key: string) => {
+              if (key === 'jwtSecret') {
+                return 'ThisIsTheFakeJWTSecret';
+              }
+              if (key === 'networkPassphrase') {
+                return Networks.TESTNET;
+              }
+              return null;
+            }),
+          },
+        },
+      ],
     }).compile();
 
     tokenService = module.get<TokenService>(TokenService);

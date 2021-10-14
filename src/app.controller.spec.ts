@@ -3,12 +3,14 @@ import { AppController } from './app.controller';
 import { ChallengeService } from './challenge/challenge.service';
 import { TokenService } from './token/token.service';
 import { AuthGuard } from '@nestjs/passport';
+import { ConfigModule } from '@nestjs/config';
 
 describe('AppController', () => {
   let appController: AppController;
 
   beforeEach(async () => {
     const app: TestingModule = await Test.createTestingModule({
+      imports: [ConfigModule.forRoot()],
       controllers: [AppController],
       providers: [ChallengeService, TokenService],
     })

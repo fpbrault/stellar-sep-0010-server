@@ -79,14 +79,13 @@ export class ChallengeService {
     this.logger.debug('client_domain:' + challenge.client_domain);
     this.logger.debug('Memo: ' + challenge.memo);
 
-    // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
     const transaction = StellarSdk.Utils.buildChallengeTx(
       this.configService.get('source.keypair'),
       challenge.account,
       challenge.home_domain || this.configService.get('homeDomain'),
       300,
       this.configService.get('networkPassphrase'),
-      this.configService.get('homeDomain') + '/auth',
+      this.configService.get('homeDomain') + '/auth', // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
       challenge.memo,
     );
 
