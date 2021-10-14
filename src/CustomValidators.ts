@@ -4,29 +4,8 @@ import {
   ValidationArguments,
 } from 'class-validator';
 import * as StellarSdk from 'stellar-sdk';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
-
-/** Private Key used by the server
- * @type {string}  */
-const sourceSecretKey: string = process.env.SERVER_PRIVATE_KEY;
-/** Keypair of the Server Account
- * @type {StellarSdk.Keypair}
- * */
-const sourceKeypair: StellarSdk.Keypair =
-  StellarSdk.Keypair.fromSecret(sourceSecretKey);
-/** Default Home Domain
- * @type {string}  */
-const HOME_DOMAIN: string = process.env.HOME_DOMAIN;
-/** Network Passphrase
- * @type {string}  */
-const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
-/** URL of the horizon server
- * @type {StellarSdk.Server}  */
-const server: StellarSdk.Server = new StellarSdk.Server(
-  'https://horizon-testnet.stellar.org',
-);
+import { Injectable, Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 /**
  * Validates that the account public key is a valid Ed25519 key
@@ -50,7 +29,8 @@ export class isEd25519 implements ValidatorConstraintInterface {
       try {
         StellarSdk.MuxedAccount.fromAddress(value, '0');
         return true;
-      } catch {
+      } catch (error) {
+        Logger.error(error);
         return false;
       }
     }
@@ -92,7 +72,8 @@ export class isXDR implements ValidatorConstraintInterface {
         input,
         validationArguments.constraints[0],
       );
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       return false;
     }
   }
@@ -124,7 +105,8 @@ export class isNotMuxedAccount implements ValidatorConstraintInterface {
         relatedPropertyName
       ];
       return !relatedValue.startsWith('M');
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       return false;
     }
   }
@@ -148,7 +130,9 @@ export class isNotMuxedAccount implements ValidatorConstraintInterface {
  * @implements {ValidatorConstraintInterface}
  */
 @ValidatorConstraint({ name: 'validatechallenge', async: true })
+@Injectable()
 export class isValidChallenge implements ValidatorConstraintInterface {
+  constructor(private configService: ConfigService) {}
   /**
    * Validation
    *
@@ -160,12 +144,13 @@ export class isValidChallenge implements ValidatorConstraintInterface {
     try {
       StellarSdk.Utils.readChallengeTx(
         input,
-        sourceKeypair.publicKey(),
-        NETWORK_PASSPHRASE,
-        HOME_DOMAIN,
-        HOME_DOMAIN + '/auth',
+        this.configService.get('source.keypair').publicKey(),
+        this.configService.get('networkPassphrase'),
+        this.configService.get('homeDomain'),
+        this.configService.get('homeDomain') + '/auth',
       );
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       return false;
     }
 
@@ -191,7 +176,9 @@ export class isValidChallenge implements ValidatorConstraintInterface {
  * @implements {ValidatorConstraintInterface}
  */
 @ValidatorConstraint({ name: 'validatesignatures', async: true })
+@Injectable()
 export class hasValidSignatures implements ValidatorConstraintInterface {
+  constructor(private configService: ConfigService) {}
   /**
    * Validation
    *
@@ -202,8 +189,14 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
   async validate(input: string): Promise<boolean> {
     try {
       // Decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope;
-      const xdr = new StellarSdk.Transaction(input, NETWORK_PASSPHRASE);
+      const xdr = new StellarSdk.Transaction(
+        input,
+        this.configService.get('networkPassphrase'),
+      );
 
+      const server: StellarSdk.Server = new StellarSdk.Server(
+        this.configService.get('horizonServer'),
+      );
       // Retrieve the Client Account to check thresholds and signature weights.
       const clientAccount = await server.loadAccount(xdr.operations[0].source);
 
@@ -211,29 +204,30 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       if (clientAccount.thresholds.high_threshold > 0) {
         StellarSdk.Utils.verifyChallengeTxSigners(
           input,
-          sourceKeypair.publicKey(),
-          NETWORK_PASSPHRASE,
+          this.configService.get('source.keypair').publicKey(),
+          this.configService.get('networkPassphrase'),
           StellarSdk.Utils.gatherTxSigners(
             xdr,
             xdr.operations.map((x) => {
               return x.source;
             }),
           ),
-          HOME_DOMAIN,
-          HOME_DOMAIN + '/auth',
+          this.configService.get('homeDomain'),
+          this.configService.get('homeDomain') + '/auth',
         );
       } else {
         StellarSdk.Utils.verifyChallengeTxThreshold(
           input,
-          sourceKeypair.publicKey(),
-          NETWORK_PASSPHRASE,
+          this.configService.get('source.keypair').publicKey(),
+          this.configService.get('networkPassphrase'),
           clientAccount.thresholds.high_threshold,
           clientAccount.signers,
-          HOME_DOMAIN,
-          HOME_DOMAIN + '/auth',
+          this.configService.get('homeDomain'),
+          this.configService.get('homeDomain') + '/auth',
         );
       }
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       return false;
     }
 

@@ -1,26 +1,9 @@
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import { Challenge } from '../challenge';
 import * as StellarSdk from 'stellar-sdk';
-import * as dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import * as toml from 'toml';
-
-dotenv.config();
-
-/** Private Key used by the server
- * @type {string}  */
-const sourceSecretKey: string = process.env.SERVER_PRIVATE_KEY;
-/** Keypair of the Server Account
- * @type {StellarSdk.Keypair}
- * */
-const sourceKeypair: StellarSdk.Keypair =
-  StellarSdk.Keypair.fromSecret(sourceSecretKey);
-/** Default Home Domain
- * @type {string}  */
-const HOME_DOMAIN: string = process.env.HOME_DOMAIN;
-/** Network Passphrase
- * @type {string}  */
-const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+import { ConfigService } from '@nestjs/config';
 
 export type ChallengeResponse =
   | {
@@ -37,6 +20,7 @@ export type ChallengeResponse =
  */
 @Injectable()
 export class ChallengeService {
+  constructor(private configService: ConfigService) {}
   private readonly logger = new Logger(ChallengeService.name);
 
   /**
@@ -69,7 +53,8 @@ export class ChallengeService {
             })
         : null;
       return client_domain_signing_key;
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       throw new BadRequestException(
         "Unable to fetch 'client_domain' SIGNING_KEY",
       );
@@ -96,18 +81,18 @@ export class ChallengeService {
 
     // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
     const transaction = StellarSdk.Utils.buildChallengeTx(
-      sourceKeypair,
+      this.configService.get('source.keypair'),
       challenge.account,
-      challenge.home_domain || HOME_DOMAIN,
+      challenge.home_domain || this.configService.get('homeDomain'),
       300,
-      NETWORK_PASSPHRASE,
-      HOME_DOMAIN + '/auth',
+      this.configService.get('networkPassphrase'),
+      this.configService.get('homeDomain') + '/auth',
       challenge.memo,
     );
 
     return {
       transaction: transaction,
-      network_passphrase: NETWORK_PASSPHRASE,
+      network_passphrase: this.configService.get('networkPassphrase'),
     };
   }
 }

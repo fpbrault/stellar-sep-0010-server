@@ -1,30 +1,9 @@
 import { Injectable } from '@nestjs/common';
 import { Token } from '../token';
 import * as StellarSdk from 'stellar-sdk';
-import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
 import { MemoNone } from 'stellar-sdk';
-
-dotenv.config();
-
-/** Private Key used by the server
- * @type {string}  */
-const sourceSecretKey: string = process.env.SERVER_PRIVATE_KEY;
-/** Keypair of the Server Account
- * @type {StellarSdk.Keypair}
- * */
-const sourceKeypair: StellarSdk.Keypair =
-  StellarSdk.Keypair.fromSecret(sourceSecretKey);
-/** Default Home Domain
- * @type {string}  */
-const HOME_DOMAIN: string = process.env.HOME_DOMAIN;
-/** Network Passphrase
- * @type {string}  */
-const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
-
-/** Secret key used for JWT generation
- * @type {string}  */
-const JWT_SECRET: string = process.env.JWT_SECRET;
+import { ConfigService } from '@nestjs/config';
 
 type TokenResponse =
   | {
@@ -46,6 +25,7 @@ export type DecodedTokenResponse =
  */
 @Injectable()
 export class TokenService {
+  constructor(private configService: ConfigService) {}
   /**
    * generateToken takes a (previously validated) challenge XDR and returns a JTW token.
    *
@@ -61,7 +41,7 @@ export class TokenService {
     try {
       transaction = new StellarSdk.Transaction(
         token.transaction,
-        NETWORK_PASSPHRASE,
+        this.configService.get('networkPassphrase'),
         true,
       );
     } catch {
@@ -74,7 +54,7 @@ export class TokenService {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const clientAccountID: string = operation.source!;
     const payload = {
-      iss: HOME_DOMAIN + '/auth',
+      iss: this.configService.get('homeDomain') + '/auth',
       sub:
         transaction.memo.type !== MemoNone
           ? clientAccountID + ':' + transaction.memo.value
@@ -84,7 +64,7 @@ export class TokenService {
     };
 
     return {
-      token: jwt.sign(payload, JWT_SECRET),
+      token: jwt.sign(payload, this.configService.get('jwtSecret')),
     };
   }
   async decodeToken(token: TokenResponse): Promise<DecodedTokenResponse> {

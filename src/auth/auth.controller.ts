@@ -2,12 +2,9 @@ import { Body, Controller, Get, Query, Post } from '@nestjs/common';
 import * as StellarSdk from 'stellar-sdk';
 import { ChallengeService } from '../challenge/challenge.service';
 import { TokenService } from '../token/token.service';
-import * as dotenv from 'dotenv';
 import { Challenge } from '../challenge';
 import { Token } from '../token';
 StellarSdk.Networks.TESTNET;
-
-dotenv.config();
 
 type ChallengeResponse =
   | {
