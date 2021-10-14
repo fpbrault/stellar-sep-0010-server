@@ -10,6 +10,7 @@
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
         <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
 
@@ -140,8 +141,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="96"
-                            class="link-to-prism">src/CustomValidators.ts:96</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="87"
+                            class="link-to-prism">src/CustomValidators.ts:87</a></div>
                 </td>
             </tr>
 
@@ -184,8 +185,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="79"
-                            class="link-to-prism">src/CustomValidators.ts:79</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="69"
+                            class="link-to-prism">src/CustomValidators.ts:69</a></div>
                 </td>
             </tr>
 
@@ -263,29 +264,8 @@
   ValidationArguments,
 } from &#x27;class-validator&#x27;;
 import * as StellarSdk from &#x27;stellar-sdk&#x27;;
-import * as dotenv from &#x27;dotenv&#x27;;
-
-dotenv.config();
-
-/** Private Key used by the server
- * @type {string}  */
-const sourceSecretKey: string &#x3D; process.env.SERVER_PRIVATE_KEY;
-/** Keypair of the Server Account
- * @type {StellarSdk.Keypair}
- * */
-const sourceKeypair: StellarSdk.Keypair &#x3D;
-  StellarSdk.Keypair.fromSecret(sourceSecretKey);
-/** Default Home Domain
- * @type {string}  */
-const HOME_DOMAIN: string &#x3D; process.env.HOME_DOMAIN;
-/** Network Passphrase
- * @type {string}  */
-const NETWORK_PASSPHRASE &#x3D; &#x27;Test SDF Network ; September 2015&#x27;;
-/** URL of the horizon server
- * @type {StellarSdk.Server}  */
-const server: StellarSdk.Server &#x3D; new StellarSdk.Server(
-  &#x27;https://horizon-testnet.stellar.org&#x27;,
-);
+import { Injectable, Logger } from &#x27;@nestjs/common&#x27;;
+import { ConfigService } from &#x27;@nestjs/config&#x27;;
 
 /**
  * Validates that the account public key is a valid Ed25519 key
@@ -304,14 +284,25 @@ export class isEd25519 implements ValidatorConstraintInterface {
    * @memberof isEd25519
    */
   validate(value: string): boolean {
+    //Check if muxed account
+    if (value.startsWith(&#x27;M&#x27;)) {
+      try {
+        StellarSdk.MuxedAccount.fromAddress(value, &#x27;0&#x27;);
+        return true;
+      } catch (error) {
+        Logger.error(error);
+        return false;
+      }
+    }
+
     return StellarSdk.StrKey.isValidEd25519PublicKey(value);
   }
 
   /**
-   * Default validation error message
+   *
    *
    * @return {string}
-   * @memberof hasValidSignatures
+   * @memberof isEd25519
    */
   defaultMessage(): string {
     return &#x27;Key is not a valid Ed25519 Public Key!&#x27;;
@@ -341,7 +332,8 @@ export class isXDR implements ValidatorConstraintInterface {
         input,
         validationArguments.constraints[0],
       );
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       return false;
     }
   }
@@ -350,10 +342,43 @@ export class isXDR implements ValidatorConstraintInterface {
    * Default validation error message
    *
    * @return {string}
-   * @memberof hasValidSignatures
+   * @memberof isXDR
    */
   defaultMessage(): string {
     return &#x27;Transaction is not a valid XDR transaction!&#x27;;
+  }
+}
+
+@ValidatorConstraint({ async: false })
+export class isNotMuxedAccount implements ValidatorConstraintInterface {
+  /**
+   *
+   *
+   * @param {ValidationArguments} validationArguments
+   * @return {boolean}
+   * @memberof isNotMuxedAccount
+   */
+  validate(input: string, validationArguments: ValidationArguments): boolean {
+    try {
+      const [relatedPropertyName] &#x3D; validationArguments.constraints;
+      const relatedValue &#x3D; (validationArguments.object as any)[
+        relatedPropertyName
+      ];
+      return !relatedValue.startsWith(&#x27;M&#x27;);
+    } catch (error) {
+      Logger.error(error);
+      return false;
+    }
+  }
+
+  /**
+   *
+   *
+   * @return {*}  {string}
+   * @memberof isNotMuxedAccount
+   */
+  defaultMessage(): string {
+    return &#x27;Account is a muxed account!&#x27;;
   }
 }
 
@@ -365,7 +390,9 @@ export class isXDR implements ValidatorConstraintInterface {
  * @implements {ValidatorConstraintInterface}
  */
 @ValidatorConstraint({ name: &#x27;validatechallenge&#x27;, async: true })
+@Injectable()
 export class isValidChallenge implements ValidatorConstraintInterface {
+  constructor(private configService: ConfigService) {}
   /**
    * Validation
    *
@@ -377,12 +404,13 @@ export class isValidChallenge implements ValidatorConstraintInterface {
     try {
       StellarSdk.Utils.readChallengeTx(
         input,
-        sourceKeypair.publicKey(),
-        NETWORK_PASSPHRASE,
-        HOME_DOMAIN,
-        HOME_DOMAIN + &#x27;/auth&#x27;,
+        this.configService.get(&#x27;source.keypair&#x27;).publicKey(),
+        this.configService.get(&#x27;networkPassphrase&#x27;),
+        this.configService.get(&#x27;homeDomain&#x27;),
+        this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
       );
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       return false;
     }
 
@@ -393,7 +421,7 @@ export class isValidChallenge implements ValidatorConstraintInterface {
    * Default validation error message
    *
    * @return {string}
-   * @memberof hasValidSignatures
+   * @memberof isValidChallenge
    */
   defaultMessage(): string {
     return &#x27;Transaction is not a valid challenge transaction!&#x27;;
@@ -408,7 +436,9 @@ export class isValidChallenge implements ValidatorConstraintInterface {
  * @implements {ValidatorConstraintInterface}
  */
 @ValidatorConstraint({ name: &#x27;validatesignatures&#x27;, async: true })
+@Injectable()
 export class hasValidSignatures implements ValidatorConstraintInterface {
+  constructor(private configService: ConfigService) {}
   /**
    * Validation
    *
@@ -419,8 +449,14 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
   async validate(input: string): Promise&lt;boolean&gt; {
     try {
       // Decode the received input as a base64-urlencoded XDR representation of Stellar transaction envelope;
-      const xdr &#x3D; new StellarSdk.Transaction(input, NETWORK_PASSPHRASE);
+      const xdr &#x3D; new StellarSdk.Transaction(
+        input,
+        this.configService.get(&#x27;networkPassphrase&#x27;),
+      );
 
+      const server: StellarSdk.Server &#x3D; new StellarSdk.Server(
+        this.configService.get(&#x27;horizonServer&#x27;),
+      );
       // Retrieve the Client Account to check thresholds and signature weights.
       const clientAccount &#x3D; await server.loadAccount(xdr.operations[0].source);
 
@@ -428,29 +464,30 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       if (clientAccount.thresholds.high_threshold &gt; 0) {
         StellarSdk.Utils.verifyChallengeTxSigners(
           input,
-          sourceKeypair.publicKey(),
-          NETWORK_PASSPHRASE,
+          this.configService.get(&#x27;source.keypair&#x27;).publicKey(),
+          this.configService.get(&#x27;networkPassphrase&#x27;),
           StellarSdk.Utils.gatherTxSigners(
             xdr,
             xdr.operations.map((x) &#x3D;&gt; {
               return x.source;
             }),
           ),
-          HOME_DOMAIN,
-          HOME_DOMAIN + &#x27;/auth&#x27;,
+          this.configService.get(&#x27;homeDomain&#x27;),
+          this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
         );
       } else {
         StellarSdk.Utils.verifyChallengeTxThreshold(
           input,
-          sourceKeypair.publicKey(),
-          NETWORK_PASSPHRASE,
+          this.configService.get(&#x27;source.keypair&#x27;).publicKey(),
+          this.configService.get(&#x27;networkPassphrase&#x27;),
           clientAccount.thresholds.high_threshold,
           clientAccount.signers,
-          HOME_DOMAIN,
-          HOME_DOMAIN + &#x27;/auth&#x27;,
+          this.configService.get(&#x27;homeDomain&#x27;),
+          this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
         );
       }
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       return false;
     }
 

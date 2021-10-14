@@ -10,6 +10,7 @@
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
         <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
 
@@ -137,8 +138,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="40"
-                            class="link-to-prism">src/auth/auth.controller.ts:40</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="37"
+                            class="link-to-prism">src/auth/auth.controller.ts:37</a></div>
                 </td>
             </tr>
 
@@ -217,8 +218,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="54"
-                            class="link-to-prism">src/auth/auth.controller.ts:54</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="51"
+                            class="link-to-prism">src/auth/auth.controller.ts:51</a></div>
                 </td>
             </tr>
 
@@ -276,12 +277,9 @@
 import * as StellarSdk from &#x27;stellar-sdk&#x27;;
 import { ChallengeService } from &#x27;../challenge/challenge.service&#x27;;
 import { TokenService } from &#x27;../token/token.service&#x27;;
-import * as dotenv from &#x27;dotenv&#x27;;
 import { Challenge } from &#x27;../challenge&#x27;;
 import { Token } from &#x27;../token&#x27;;
 StellarSdk.Networks.TESTNET;
-
-dotenv.config();
 
 type ChallengeResponse &#x3D;
   | {

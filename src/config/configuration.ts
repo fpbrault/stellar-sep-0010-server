@@ -1,7 +1,6 @@
 import * as StellarSdk from 'stellar-sdk';
 
 export default () => ({
-  port: parseInt(process.env.PORT, 10) || 3000,
   source: {
     keypair: StellarSdk.Keypair.fromSecret(process.env.SERVER_PRIVATE_KEY),
     secretKey: process.env.SERVER_PRIVATE_KEY,

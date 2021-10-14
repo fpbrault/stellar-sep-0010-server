@@ -11,6 +11,7 @@ import { isEd25519, isNotMuxedAccount } from './CustomValidators';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
+// TODO: get home domain from config module
 const HOME_DOMAIN = new URL(process.env.HOME_DOMAIN);
 
 /**

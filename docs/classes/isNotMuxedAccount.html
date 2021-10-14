@@ -44,7 +44,7 @@
 
 <ol class="breadcrumb">
   <li>Classes</li>
-  <li >isEd25519</li>
+  <li >isNotMuxedAccount</li>
 </ol>
 
 <ul class="nav nav-tabs" role="tablist">
@@ -66,13 +66,6 @@
         </p>
 
 
-            <p class="comment">
-                <h3>Description</h3>
-            </p>
-            <p class="comment">
-                <p>Validates that the account public key is a valid Ed25519 key</p>
-
-            </p>
 
 
             <p class="comment">
@@ -141,8 +134,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="47"
-                            class="link-to-prism">src/CustomValidators.ts:47</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="120"
+                            class="link-to-prism">src/CustomValidators.ts:120</a></div>
                 </td>
             </tr>
 
@@ -157,7 +150,8 @@
 
                     </div>
                     <div class="io-description">
-                        
+                        <p>{string}</p>
+
                     </div>
                 </td>
             </tr>
@@ -176,23 +170,21 @@
             </tr>
             <tr>
                 <td class="col-md-4">
-<code>validate(value: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>)</code>
+<code>validate(input: <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank">string</a>, validationArguments: ValidationArguments)</code>
                 </td>
             </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="26"
-                            class="link-to-prism">src/CustomValidators.ts:26</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="101"
+                            class="link-to-prism">src/CustomValidators.ts:101</a></div>
                 </td>
             </tr>
 
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-description"><p>Validation</p>
-</div>
 
                     <div class="io-description">
                         <b>Parameters :</b>
@@ -207,9 +199,21 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>value</td>
+                                    <td>input</td>
                                     <td>
                                                 <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+                                    </td>
+
+                                    <td>
+                                        No
+                                    </td>
+
+
+                                </tr>
+                                <tr>
+                                    <td>validationArguments</td>
+                                    <td>
+                                            <code>ValidationArguments</code>
                                     </td>
 
                                     <td>
@@ -518,7 +522,7 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
             var COMPODOC_CURRENT_PAGE_CONTEXT = 'class';
-            var COMPODOC_CURRENT_PAGE_URL = 'isEd25519.html';
+            var COMPODOC_CURRENT_PAGE_URL = 'isNotMuxedAccount.html';
             var MAX_SEARCH_RESULTS = 15;
        </script>
 

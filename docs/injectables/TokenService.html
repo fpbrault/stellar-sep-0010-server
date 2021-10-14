@@ -10,6 +10,7 @@
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
         <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
 
@@ -104,6 +105,54 @@
     </table>
 </section>
 
+            <section>
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(configService: ConfigService)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="27" class="link-to-prism">src/token/token.service.ts:27</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>configService</td>
+                                                  
+                                                        <td>
+                                                                    <code>ConfigService</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
 
             <section>
     
@@ -132,8 +181,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="61"
-                            class="link-to-prism">src/token/token.service.ts:61</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="70"
+                            class="link-to-prism">src/token/token.service.ts:70</a></div>
                 </td>
             </tr>
 
@@ -203,8 +252,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="44"
-                            class="link-to-prism">src/token/token.service.ts:44</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="36"
+                            class="link-to-prism">src/token/token.service.ts:36</a></div>
                 </td>
             </tr>
 
@@ -263,18 +312,9 @@
         <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Injectable } from &#x27;@nestjs/common&#x27;;
 import { Token } from &#x27;../token&#x27;;
 import * as StellarSdk from &#x27;stellar-sdk&#x27;;
-import * as dotenv from &#x27;dotenv&#x27;;
 import * as jwt from &#x27;jsonwebtoken&#x27;;
-
-dotenv.config();
-
-/** Default Home Domain
- * @type {string}  */
-const HOME_DOMAIN: string &#x3D; process.env.HOME_DOMAIN;
-
-/** Secret key used for JWT generation
- * @type {string}  */
-const JWT_SECRET: string &#x3D; process.env.JWT_SECRET;
+import { MemoNone } from &#x27;stellar-sdk&#x27;;
+import { ConfigService } from &#x27;@nestjs/config&#x27;;
 
 type TokenResponse &#x3D;
   | {
@@ -296,6 +336,7 @@ export type DecodedTokenResponse &#x3D;
  */
 @Injectable()
 export class TokenService {
+  constructor(private configService: ConfigService) {}
   /**
    * generateToken takes a (previously validated) challenge XDR and returns a JTW token.
    *
@@ -304,20 +345,37 @@ export class TokenService {
    * @memberof TokenService
    */
   async generateToken(token: Token): Promise&lt;TokenResponse&gt; {
-    const xdr &#x3D; new StellarSdk.Transaction(
-      token.transaction,
-      &#x27;Test SDF Network ; September 2015&#x27;,
-    );
+    let transaction: StellarSdk.Transaction&lt;
+      StellarSdk.Memo&lt;StellarSdk.MemoType&gt;,
+      StellarSdk.Operation[]
+    &gt;;
+    try {
+      transaction &#x3D; new StellarSdk.Transaction(
+        token.transaction,
+        this.configService.get(&#x27;networkPassphrase&#x27;),
+        true,
+      );
+    } catch {
+      throw new Error(
+        &#x27;Invalid challenge: unable to deserialize challengeTx transaction string&#x27;,
+      );
+    }
 
+    const [operation] &#x3D; transaction.operations;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const clientAccountID: string &#x3D; operation.source!;
     const payload &#x3D; {
-      iss: HOME_DOMAIN + &#x27;/auth&#x27;,
-      sub: xdr.operations[0].source,
-      iat: parseInt(xdr.timeBounds.minTime, 10),
-      exp: parseInt(xdr.timeBounds.minTime, 10) + 86400,
+      iss: this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
+      sub:
+        transaction.memo.type !&#x3D;&#x3D; MemoNone
+          ? clientAccountID + &#x27;:&#x27; + transaction.memo.value
+          : clientAccountID,
+      iat: parseInt(transaction.timeBounds.minTime, 10),
+      exp: parseInt(transaction.timeBounds.minTime, 10) + 86400,
     };
 
     return {
-      token: jwt.sign(payload, JWT_SECRET),
+      token: jwt.sign(payload, this.configService.get(&#x27;jwtSecret&#x27;)),
     };
   }
   async decodeToken(token: TokenResponse): Promise&lt;DecodedTokenResponse&gt; {

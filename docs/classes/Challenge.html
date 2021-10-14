@@ -10,6 +10,7 @@
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
         <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
 
@@ -155,7 +156,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="29" class="link-to-prism">src/challenge.ts:29</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="31" class="link-to-prism">src/challenge.ts:31</a></div>
                         </td>
                     </tr>
 
@@ -192,7 +193,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="54" class="link-to-prism">src/challenge.ts:54</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="60" class="link-to-prism">src/challenge.ts:60</a></div>
                         </td>
                     </tr>
 
@@ -229,7 +230,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="46" class="link-to-prism">src/challenge.ts:46</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="52" class="link-to-prism">src/challenge.ts:52</a></div>
                         </td>
                     </tr>
 
@@ -260,13 +261,13 @@
                         <b>Decorators : </b>
                         <br />
                         <code>
-                            @ApiPropertyOptional({description: &#x27;The memo to attach to the challenge transaction. Only permitted if a Stellar account (G...) is used. The memo must be of type id. Other memo types are not supported. See the Memo section for details.&#x27;})<br />@IsOptional()<br />@IsByteLength(0, 32)<br />
+                            @ApiPropertyOptional({description: &#x27;The memo to attach to the challenge transaction. Only permitted if a Stellar account (G...) is used. The memo must be of type id. Other memo types are not supported.&#x27;})<br />@IsOptional()<br />@IsNumberString({no_symbols: true})<br />@Validate(isNotMuxedAccount, [&#x27;account&#x27;], {message: &#x27;Memo cannot be used with a muxed account&#x27;})<br />@IsByteLength(0, 32)<br />
                         </code>
                     </td>
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="37" class="link-to-prism">src/challenge.ts:37</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="43" class="link-to-prism">src/challenge.ts:43</a></div>
                         </td>
                     </tr>
 
@@ -290,13 +291,15 @@ import {
   IsByteLength,
   IsFQDN,
   IsIn,
+  IsNumberString,
   IsOptional,
   Validate,
 } from &#x27;class-validator&#x27;;
-import { isEd25519 } from &#x27;./CustomValidators&#x27;;
+import { isEd25519, isNotMuxedAccount } from &#x27;./CustomValidators&#x27;;
 import * as dotenv from &#x27;dotenv&#x27;;
 
 dotenv.config();
+// TODO: get home domain from config module
 const HOME_DOMAIN &#x3D; new URL(process.env.HOME_DOMAIN);
 
 /**
@@ -317,9 +320,13 @@ export class Challenge {
 
   @ApiPropertyOptional({
     description:
-      &#x27;The memo to attach to the challenge transaction. Only permitted if a Stellar account (G...) is used. The memo must be of type id. Other memo types are not supported. See the Memo section for details.&#x27;,
+      &#x27;The memo to attach to the challenge transaction. Only permitted if a Stellar account (G...) is used. The memo must be of type id. Other memo types are not supported.&#x27;,
   })
   @IsOptional()
+  @IsNumberString({ no_symbols: true })
+  @Validate(isNotMuxedAccount, [&#x27;account&#x27;], {
+    message: &#x27;Memo cannot be used with a muxed account&#x27;,
+  })
   @IsByteLength(0, 32)
   readonly memo?: string;
 

@@ -10,6 +10,7 @@
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
         <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
 
@@ -120,6 +121,54 @@
     </table>
 </section>
 
+            <section>
+    <h3 id="constructor">Constructor</h3>
+        <table class="table table-sm table-bordered">
+            <tbody>
+                <tr>
+                    <td class="col-md-4">
+<code>constructor(configService: ConfigService)</code>
+                    </td>
+                </tr>
+                        <tr>
+                            <td class="col-md-4">
+                                <div class="io-line">Defined in <a href="" data-line="22" class="link-to-prism">src/challenge/challenge.service.ts:22</a></div>
+                            </td>
+                        </tr>
+
+                <tr>
+                    <td class="col-md-4">
+                            <div>
+                                    <b>Parameters :</b>
+                                    <table class="params">
+                                        <thead>
+                                            <tr>
+                                                <td>Name</td>
+                                                    <td>Type</td>
+                                                <td>Optional</td>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                                <tr>
+                                                        <td>configService</td>
+                                                  
+                                                        <td>
+                                                                    <code>ConfigService</code>
+                                                        </td>
+                                                  
+                                                    <td>
+                                                            No
+                                                    </td>
+                                                    
+                                                </tr>
+                                        </tbody>
+                                    </table>
+                            </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+</section>
 
             <section>
     
@@ -148,8 +197,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="86"
-                            class="link-to-prism">src/challenge/challenge.service.ts:86</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="71"
+                            class="link-to-prism">src/challenge/challenge.service.ts:71</a></div>
                 </td>
             </tr>
 
@@ -221,8 +270,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="49"
-                            class="link-to-prism">src/challenge/challenge.service.ts:49</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="33"
+                            class="link-to-prism">src/challenge/challenge.service.ts:33</a></div>
                 </td>
             </tr>
 
@@ -298,7 +347,7 @@
                 </tr>
                     <tr>
                         <td class="col-md-4">
-                                <div class="io-line">Defined in <a href="" data-line="40" class="link-to-prism">src/challenge/challenge.service.ts:40</a></div>
+                                <div class="io-line">Defined in <a href="" data-line="24" class="link-to-prism">src/challenge/challenge.service.ts:24</a></div>
                         </td>
                     </tr>
 
@@ -314,26 +363,9 @@
         <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { BadRequestException, Injectable, Logger } from &#x27;@nestjs/common&#x27;;
 import { Challenge } from &#x27;../challenge&#x27;;
 import * as StellarSdk from &#x27;stellar-sdk&#x27;;
-import * as dotenv from &#x27;dotenv&#x27;;
 import fetch from &#x27;node-fetch&#x27;;
 import * as toml from &#x27;toml&#x27;;
-
-dotenv.config();
-
-/** Private Key used by the server
- * @type {string}  */
-const sourceSecretKey: string &#x3D; process.env.SERVER_PRIVATE_KEY;
-/** Keypair of the Server Account
- * @type {StellarSdk.Keypair}
- * */
-const sourceKeypair: StellarSdk.Keypair &#x3D;
-  StellarSdk.Keypair.fromSecret(sourceSecretKey);
-/** Default Home Domain
- * @type {string}  */
-const HOME_DOMAIN: string &#x3D; process.env.HOME_DOMAIN;
-/** Network Passphrase
- * @type {string}  */
-const NETWORK_PASSPHRASE &#x3D; &#x27;Test SDF Network ; September 2015&#x27;;
+import { ConfigService } from &#x27;@nestjs/config&#x27;;
 
 export type ChallengeResponse &#x3D;
   | {
@@ -350,6 +382,7 @@ export type ChallengeResponse &#x3D;
  */
 @Injectable()
 export class ChallengeService {
+  constructor(private configService: ConfigService) {}
   private readonly logger &#x3D; new Logger(ChallengeService.name);
 
   /**
@@ -382,7 +415,8 @@ export class ChallengeService {
             })
         : null;
       return client_domain_signing_key;
-    } catch {
+    } catch (error) {
+      Logger.error(error);
       throw new BadRequestException(
         &quot;Unable to fetch &#x27;client_domain&#x27; SIGNING_KEY&quot;,
       );
@@ -407,20 +441,20 @@ export class ChallengeService {
     this.logger.debug(&#x27;client_domain:&#x27; + challenge.client_domain);
     this.logger.debug(&#x27;Memo: &#x27; + challenge.memo);
 
-    // TODO: Add memo support once js-stellar-sdk supports it officially (only beta at the moment https://github.com/stellar/js-stellar-sdk/releases/tag/v9.0.0-beta.1)
     // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
     const transaction &#x3D; StellarSdk.Utils.buildChallengeTx(
-      sourceKeypair,
+      this.configService.get(&#x27;source.keypair&#x27;),
       challenge.account,
-      challenge.home_domain || HOME_DOMAIN,
+      challenge.home_domain || this.configService.get(&#x27;homeDomain&#x27;),
       300,
-      NETWORK_PASSPHRASE,
-      HOME_DOMAIN + &#x27;/auth&#x27;,
+      this.configService.get(&#x27;networkPassphrase&#x27;),
+      this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
+      challenge.memo,
     );
 
     return {
       transaction: transaction,
-      network_passphrase: NETWORK_PASSPHRASE,
+      network_passphrase: this.configService.get(&#x27;networkPassphrase&#x27;),
     };
   }
 }
