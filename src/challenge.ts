@@ -3,10 +3,11 @@ import {
   IsByteLength,
   IsFQDN,
   IsIn,
+  IsNumberString,
   IsOptional,
   Validate,
 } from 'class-validator';
-import { isEd25519 } from './CustomValidators';
+import { isEd25519, isNotMuxedAccount } from './CustomValidators';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
@@ -30,9 +31,13 @@ export class Challenge {
 
   @ApiPropertyOptional({
     description:
-      'The memo to attach to the challenge transaction. Only permitted if a Stellar account (G...) is used. The memo must be of type id. Other memo types are not supported. See the Memo section for details.',
+      'The memo to attach to the challenge transaction. Only permitted if a Stellar account (G...) is used. The memo must be of type id. Other memo types are not supported.',
   })
   @IsOptional()
+  @IsNumberString({ no_symbols: true })
+  @Validate(isNotMuxedAccount, ['account'], {
+    message: 'Memo cannot be used with a muxed account',
+  })
   @IsByteLength(0, 32)
   readonly memo?: string;
 

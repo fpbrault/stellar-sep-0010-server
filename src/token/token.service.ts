@@ -3,12 +3,24 @@ import { Token } from '../token';
 import * as StellarSdk from 'stellar-sdk';
 import * as dotenv from 'dotenv';
 import * as jwt from 'jsonwebtoken';
+import { MemoNone } from 'stellar-sdk';
 
 dotenv.config();
 
+/** Private Key used by the server
+ * @type {string}  */
+const sourceSecretKey: string = process.env.SERVER_PRIVATE_KEY;
+/** Keypair of the Server Account
+ * @type {StellarSdk.Keypair}
+ * */
+const sourceKeypair: StellarSdk.Keypair =
+  StellarSdk.Keypair.fromSecret(sourceSecretKey);
 /** Default Home Domain
  * @type {string}  */
 const HOME_DOMAIN: string = process.env.HOME_DOMAIN;
+/** Network Passphrase
+ * @type {string}  */
+const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
 
 /** Secret key used for JWT generation
  * @type {string}  */
@@ -42,16 +54,33 @@ export class TokenService {
    * @memberof TokenService
    */
   async generateToken(token: Token): Promise<TokenResponse> {
-    const xdr = new StellarSdk.Transaction(
-      token.transaction,
-      'Test SDF Network ; September 2015',
-    );
+    let transaction: StellarSdk.Transaction<
+      StellarSdk.Memo<StellarSdk.MemoType>,
+      StellarSdk.Operation[]
+    >;
+    try {
+      transaction = new StellarSdk.Transaction(
+        token.transaction,
+        NETWORK_PASSPHRASE,
+        true,
+      );
+    } catch {
+      throw new Error(
+        'Invalid challenge: unable to deserialize challengeTx transaction string',
+      );
+    }
 
+    const [operation] = transaction.operations;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const clientAccountID: string = operation.source!;
     const payload = {
       iss: HOME_DOMAIN + '/auth',
-      sub: xdr.operations[0].source,
-      iat: parseInt(xdr.timeBounds.minTime, 10),
-      exp: parseInt(xdr.timeBounds.minTime, 10) + 86400,
+      sub:
+        transaction.memo.type !== MemoNone
+          ? clientAccountID + ':' + transaction.memo.value
+          : clientAccountID,
+      iat: parseInt(transaction.timeBounds.minTime, 10),
+      exp: parseInt(transaction.timeBounds.minTime, 10) + 86400,
     };
 
     return {

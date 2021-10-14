@@ -45,14 +45,24 @@ export class isEd25519 implements ValidatorConstraintInterface {
    * @memberof isEd25519
    */
   validate(value: string): boolean {
+    //Check if muxed account
+    if (value.startsWith('M')) {
+      try {
+        StellarSdk.MuxedAccount.fromAddress(value, '0');
+        return true;
+      } catch {
+        return false;
+      }
+    }
+
     return StellarSdk.StrKey.isValidEd25519PublicKey(value);
   }
 
   /**
-   * Default validation error message
+   *
    *
    * @return {string}
-   * @memberof hasValidSignatures
+   * @memberof isEd25519
    */
   defaultMessage(): string {
     return 'Key is not a valid Ed25519 Public Key!';
@@ -91,10 +101,42 @@ export class isXDR implements ValidatorConstraintInterface {
    * Default validation error message
    *
    * @return {string}
-   * @memberof hasValidSignatures
+   * @memberof isXDR
    */
   defaultMessage(): string {
     return 'Transaction is not a valid XDR transaction!';
+  }
+}
+
+@ValidatorConstraint({ async: false })
+export class isNotMuxedAccount implements ValidatorConstraintInterface {
+  /**
+   *
+   *
+   * @param {ValidationArguments} validationArguments
+   * @return {boolean}
+   * @memberof isNotMuxedAccount
+   */
+  validate(input: string, validationArguments: ValidationArguments): boolean {
+    try {
+      const [relatedPropertyName] = validationArguments.constraints;
+      const relatedValue = (validationArguments.object as any)[
+        relatedPropertyName
+      ];
+      return !relatedValue.startsWith('M');
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   *
+   *
+   * @return {*}  {string}
+   * @memberof isNotMuxedAccount
+   */
+  defaultMessage(): string {
+    return 'Account is a muxed account!';
   }
 }
 
@@ -134,7 +176,7 @@ export class isValidChallenge implements ValidatorConstraintInterface {
    * Default validation error message
    *
    * @return {string}
-   * @memberof hasValidSignatures
+   * @memberof isValidChallenge
    */
   defaultMessage(): string {
     return 'Transaction is not a valid challenge transaction!';

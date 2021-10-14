@@ -94,7 +94,6 @@ export class ChallengeService {
     this.logger.debug('client_domain:' + challenge.client_domain);
     this.logger.debug('Memo: ' + challenge.memo);
 
-    // TODO: Add memo support once js-stellar-sdk supports it officially (only beta at the moment https://github.com/stellar/js-stellar-sdk/releases/tag/v9.0.0-beta.1)
     // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
     const transaction = StellarSdk.Utils.buildChallengeTx(
       sourceKeypair,
@@ -103,6 +102,7 @@ export class ChallengeService {
       300,
       NETWORK_PASSPHRASE,
       HOME_DOMAIN + '/auth',
+      challenge.memo,
     );
 
     return {

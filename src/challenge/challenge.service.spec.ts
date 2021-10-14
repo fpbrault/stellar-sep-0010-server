@@ -16,7 +16,7 @@ describe('ChallengeService', () => {
   it('should be defined', () => {
     expect(challengeService).toBeDefined();
   });
-  it('should give the expected return', async () => {
+  it('should return a valid SEP-0010 challenge transaction', async () => {
     const challenge = {
       account: 'GBL6EYJJIG2YT5FX3VGW7AWJM6RHJYGYD4R43KLZWF5KAQX7M4P2ITVI',
     };
@@ -69,17 +69,19 @@ describe('ChallengeService', () => {
       expect(e.message).toBe("Unable to fetch 'client_domain' SIGNING_KEY");
     }
   });
-  it('should give the expected return', async () => {
+  it('should return the signing key retrieved from the client domain', async () => {
     const challenge = {
-      account: 'GBL6EYJJIG2YT5FX3VGW7AWJM6RHJYGYD4R43KLZWF5KAQX7M4P2ITVI',
-      client_domain: 'stellar.beign.es',
+      account: 'GAVBS6SXMRD7C3IRN5K2SY5C2CAUFHBVOGWTQXADSBUHAFDDUKVTQWWY',
+      client_domain: 'ultrastellar.com',
     };
     const signingKeyResponse = await challengeService.getSigningKey(
       challenge.client_domain,
     );
     expect(typeof signingKeyResponse).toBe('string');
     expect(signingKeyResponse).toEqual(
-      'GCQBVSARJXE4MCDOD7CZ2BNIB34KQ7KM4VO3OCHJXCJQW3IOYWOGWDLP',
+      'GA3UK3JHOYYD3TAUH5C7NDOUDWBRF5FC4MECXFA2VRPEHIDQUOJIVOAJ',
     );
   });
+
+  // TODO: Add tests for muxed accounts and memos
 });
