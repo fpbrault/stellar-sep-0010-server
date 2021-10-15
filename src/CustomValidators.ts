@@ -147,7 +147,7 @@ export class isValidChallenge implements ValidatorConstraintInterface {
         this.configService.get('source.keypair').publicKey(),
         this.configService.get('networkPassphrase'),
         this.configService.get('homeDomain'),
-        this.configService.get('homeDomain') + '/auth',
+        this.configService.get('homeDomain'),
       );
     } catch (error) {
       Logger.error(error);
@@ -217,7 +217,7 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
           ),
 
           `${homeDomain}`,
-          `${homeDomain}` + '/auth',
+          `${homeDomain}`,
         );
       } else {
         StellarSdk.Utils.verifyChallengeTxThreshold(
@@ -227,7 +227,7 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
           clientAccount.thresholds.high_threshold,
           clientAccount.signers,
           `${homeDomain}`,
-          `${homeDomain}` + '/auth',
+          `${homeDomain}`,
         );
       }
     } catch (error) {

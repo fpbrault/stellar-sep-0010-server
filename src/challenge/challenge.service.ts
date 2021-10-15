@@ -85,7 +85,7 @@ export class ChallengeService {
       challenge.home_domain || this.configService.get('homeDomain'),
       300,
       this.configService.get('networkPassphrase'),
-      this.configService.get('homeDomain') + '/auth', // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
+      this.configService.get('homeDomain'), // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
       challenge.memo,
     );
 

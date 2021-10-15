@@ -48,7 +48,7 @@ describe('AppController (e2e)', () => {
           'stellar.beign.es',
           300,
           StellarSdk.Networks.TESTNET,
-          'stellar.beign.es/auth',
+          'stellar.beign.es',
         );
 
         const response = await request(app.getHttpServer())
