@@ -2,7 +2,7 @@ ACCOUNTS = [ "GBGRK3P6SLA5IFWE2KVEYM7CGDSYCCZND372BYY5JM3SZVIYB4SOCSR3" ]
 VERSION = "0.1.0"
 SIGNING_KEY = "GBGRK3P6SLA5IFWE2KVEYM7CGDSYCCZND372BYY5JM3SZVIYB4SOCSR3"
 NETWORK_PASSPHRASE = "Test SDF Network ; September 2015"
-WEB_AUTH_ENDPOINT = "https://stellar.beign.es/auth"
+WEB_AUTH_ENDPOINT = "https://powerful-everglades-30138.herokuapp.com/auth"
 SQ02_EASTER_EGG = "Log into series 2 of Stellar Quest then visit quest.stellar.org/series2. Finally drag and drop your Stellar Quest series 2 badge PNG images onto the screen. Enjoy!"
 
 [[PRINCIPALS]]
