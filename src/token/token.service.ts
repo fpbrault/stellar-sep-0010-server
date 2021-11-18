@@ -38,12 +38,18 @@ export class TokenService {
       StellarSdk.Memo<StellarSdk.MemoType>,
       StellarSdk.Operation[]
     >;
+    let client_domain;
     try {
       transaction = new StellarSdk.Transaction(
         token.transaction,
         this.configService.get('networkPassphrase'),
         true,
       );
+      for (const op of transaction.operations) {
+        if (op.type === 'manageData' && op.name === 'client_domain') {
+          client_domain = op.value;
+        }
+      }
     } catch {
       throw new Error(
         'Invalid challenge: unable to deserialize challengeTx transaction string',
@@ -53,15 +59,27 @@ export class TokenService {
     const [operation] = transaction.operations;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const clientAccountID: string = operation.source!;
-    const payload = {
-      iss: 'https://' + this.configService.get('homeDomain') + '/auth',
-      sub:
-        transaction.memo.type !== MemoNone
-          ? clientAccountID + ':' + transaction.memo.value
-          : clientAccountID,
-      iat: parseInt(transaction.timeBounds.minTime, 10),
-      exp: parseInt(transaction.timeBounds.minTime, 10) + 86400,
-    };
+    const payload =
+      client_domain !== null && client_domain !== undefined
+        ? {
+            iss: 'https://' + this.configService.get('homeDomain') + '/auth',
+            sub:
+              transaction.memo.type !== MemoNone
+                ? clientAccountID + ':' + transaction.memo.value
+                : clientAccountID,
+            iat: parseInt(transaction.timeBounds.minTime, 10),
+            exp: parseInt(transaction.timeBounds.minTime, 10) + 86400,
+            client_domain: client_domain.toString(),
+          }
+        : {
+            iss: 'https://' + this.configService.get('homeDomain') + '/auth',
+            sub:
+              transaction.memo.type !== MemoNone
+                ? clientAccountID + ':' + transaction.memo.value
+                : clientAccountID,
+            iat: parseInt(transaction.timeBounds.minTime, 10),
+            exp: parseInt(transaction.timeBounds.minTime, 10) + 86400,
+          };
 
     return {
       token: jwt.sign(payload, this.configService.get('jwtSecret')),
