@@ -39,7 +39,7 @@ SIGNING_KEY = "` +
 NETWORK_PASSPHRASE = "` +
       this.configService.get('networkPassphrase') +
       `"
-WEB_AUTH_ENDPOINT = "` +
+WEB_AUTH_ENDPOINT = "https://` +
       this.configService.get('homeDomain') +
       `/auth"
 ` +
