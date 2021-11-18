@@ -60,7 +60,7 @@ export class TokenService {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const clientAccountID: string = operation.source!;
     const payload =
-      client_domain !== null
+      client_domain !== null && client_domain !== undefined
         ? {
             iss: 'https://' + this.configService.get('homeDomain') + '/auth',
             sub:

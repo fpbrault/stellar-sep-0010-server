@@ -104,7 +104,6 @@ export class ChallengeService {
         challenge.memo,
       );
     }
-    console.log(transaction);
 
     return {
       transaction: transaction,
