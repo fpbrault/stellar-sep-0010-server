@@ -33,7 +33,7 @@ export class AppController {
       this.configService.get('source.publicKey') +
       `" ]
 VERSION = "0.1.0"
-SIGNING_KEY = ""` +
+SIGNING_KEY = "` +
       this.configService.get('source.publicKey') +
       `"
 NETWORK_PASSPHRASE = "` +
