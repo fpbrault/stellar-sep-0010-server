@@ -9,7 +9,7 @@
 
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
-        <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/dark.css">
         <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
@@ -79,6 +79,9 @@
                     <td class="col-md-4">
                         <ul class="index-list">
                             <li>
+                                <a href="#createToml" >createToml</a>
+                            </li>
+                            <li>
                                 <a href="#decodeToken" >decodeToken</a>
                             </li>
                         </ul>
@@ -98,6 +101,50 @@
     <h3 id="methods">
         Methods
     </h3>
+    <table class="table table-sm table-bordered">
+        <tbody>
+            <tr>
+                <td class="col-md-4">
+                    <a name="createToml"></a>
+                    <span class="name">
+                        <span ><b>createToml</b></span>
+                        <a href="#createToml"><span class="icon ion-ios-link"></span></a>
+                    </span>
+                </td>
+            </tr>
+            <tr>
+                <td class="col-md-4">
+<code>createToml()</code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <b>Decorators : </b>
+                    <br />
+                    <code>@Get(&#x27;.well-known/stellar.toml&#x27;)<br />@Header(&#x27;content-type&#x27;, &#x27;text/plain&#x27;)<br /></code>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="col-md-4">
+                    <div class="io-line">Defined in <a href="" data-line="30"
+                            class="link-to-prism">src/app.controller.ts:30</a></div>
+                </td>
+            </tr>
+
+
+            <tr>
+                <td class="col-md-4">
+
+                    <div class="io-description">
+                        <b>Returns : </b>        <code><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/string" target="_blank" >string</a></code>
+
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
     <table class="table table-sm table-bordered">
         <tbody>
             <tr>
@@ -125,8 +172,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="20"
-                            class="link-to-prism">src/app.controller.ts:20</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="24"
+                            class="link-to-prism">src/app.controller.ts:24</a></div>
                 </td>
             </tr>
 
@@ -180,14 +227,18 @@
 
 
     <div class="tab-pane fade  tab-source-code" id="c-source">
-        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Controller, Get, UseGuards, Request } from &#x27;@nestjs/common&#x27;;
+        <pre class="line-numbers compodoc-sourcecode"><code class="language-typescript">import { Controller, Get, UseGuards, Request, Header } from &#x27;@nestjs/common&#x27;;
 import { JwtAuthGuard } from &#x27;./auth/jwt-auth.guard&#x27;;
 import { TokenService, DecodedTokenResponse } from &#x27;./token/token.service&#x27;;
 import { ApiBearerAuth } from &#x27;@nestjs/swagger&#x27;;
+import { ConfigService } from &#x27;@nestjs/config&#x27;;
 
 @Controller()
 export class AppController {
-  constructor(private readonly tokenService: TokenService) {}
+  constructor(
+    private readonly tokenService: TokenService,
+    private configService: ConfigService,
+  ) {}
 
   /**
    * Decodes and returns the JWT token
@@ -201,6 +252,30 @@ export class AppController {
   @ApiBearerAuth()
   decodeToken(@Request() req: any): Promise&lt;DecodedTokenResponse&gt; {
     return this.tokenService.decodeToken(req.headers.authorization.slice(7));
+  }
+
+  @Get(&#x27;.well-known/stellar.toml&#x27;)
+  @Header(&#x27;content-type&#x27;, &#x27;text/plain&#x27;)
+  createToml(): string {
+    return (
+      &#x60;ACCOUNTS &#x3D; [ &quot;&#x60; +
+      this.configService.get(&#x27;source.publicKey&#x27;) +
+      &#x60;&quot; ]
+VERSION &#x3D; &quot;0.1.0&quot;
+SIGNING_KEY &#x3D; &quot;&#x60; +
+      this.configService.get(&#x27;source.publicKey&#x27;) +
+      &#x60;&quot;
+NETWORK_PASSPHRASE &#x3D; &quot;&#x60; +
+      this.configService.get(&#x27;networkPassphrase&#x27;) +
+      &#x60;&quot;
+WEB_AUTH_ENDPOINT &#x3D; &quot;https://&#x60; +
+      this.configService.get(&#x27;homeDomain&#x27;) +
+      &#x60;/auth&quot;
+&#x60; +
+      this.configService.get(&#x27;tomlExtras&#x27;) +
+      &#x60;
+&#x60;
+    );
   }
 }
 </code></pre>
@@ -233,6 +308,15 @@ export class AppController {
                <!-- END CONTENT -->
            </div>
        </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
 
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;

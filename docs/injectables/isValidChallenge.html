@@ -9,7 +9,7 @@
 
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
-        <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/dark.css">
         <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
@@ -430,7 +430,7 @@ export class isValidChallenge implements ValidatorConstraintInterface {
         this.configService.get(&#x27;source.keypair&#x27;).publicKey(),
         this.configService.get(&#x27;networkPassphrase&#x27;),
         this.configService.get(&#x27;homeDomain&#x27;),
-        this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
+        this.configService.get(&#x27;homeDomain&#x27;),
       );
     } catch (error) {
       Logger.error(error);
@@ -475,6 +475,7 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       const xdr &#x3D; new StellarSdk.Transaction(
         input,
         this.configService.get(&#x27;networkPassphrase&#x27;),
+        true,
       );
 
       const server: StellarSdk.Server &#x3D; new StellarSdk.Server(
@@ -482,6 +483,8 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       );
       // Retrieve the Client Account to check thresholds and signature weights.
       const clientAccount &#x3D; await server.loadAccount(xdr.operations[0].source);
+
+      const homeDomain &#x3D; this.configService.get(&#x27;homeDomain&#x27;);
 
       // Check if high_threshold is higher than 0. If it is, verify that the signatures provide weight that meets this threshold.
       if (clientAccount.thresholds.high_threshold &gt; 0) {
@@ -495,8 +498,9 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
               return x.source;
             }),
           ),
-          this.configService.get(&#x27;homeDomain&#x27;),
-          this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
+
+          &#x60;${homeDomain}&#x60;,
+          &#x60;${homeDomain}&#x60;,
         );
       } else {
         StellarSdk.Utils.verifyChallengeTxThreshold(
@@ -505,8 +509,8 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
           this.configService.get(&#x27;networkPassphrase&#x27;),
           clientAccount.thresholds.high_threshold,
           clientAccount.signers,
-          this.configService.get(&#x27;homeDomain&#x27;),
-          this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
+          &#x60;${homeDomain}&#x60;,
+          &#x60;${homeDomain}&#x60;,
         );
       }
     } catch (error) {
@@ -556,6 +560,15 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
                <!-- END CONTENT -->
            </div>
        </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
 
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
