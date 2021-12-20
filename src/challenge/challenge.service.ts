@@ -49,6 +49,10 @@ export class ChallengeService {
             .then((data: string) => {
               if (toml.parse(data).SIGNING_KEY) {
                 return toml.parse(data).SIGNING_KEY;
+              } else {
+                throw new BadRequestException(
+                  "Unable to fetch 'client_domain' SIGNING_KEY",
+                );
               }
             })
         : null;
@@ -104,7 +108,6 @@ export class ChallengeService {
         challenge.memo,
       );
     }
-
     return {
       transaction: transaction,
       network_passphrase: this.configService.get('networkPassphrase'),
