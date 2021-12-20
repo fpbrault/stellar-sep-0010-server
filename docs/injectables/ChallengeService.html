@@ -9,7 +9,7 @@
 
         <link rel="icon" type="image/x-icon" href="../images/favicon.ico">
 	   <link rel="stylesheet" href="../styles/style.css">
-        <link rel="stylesheet" href="../styles/dark.css" media="(prefers-color-scheme: dark)">
+        <link rel="stylesheet" href="../styles/dark.css">
         <link rel="stylesheet" href="../styles/stripe.css">
     </head>
     <body>
@@ -197,8 +197,8 @@
 
             <tr>
                 <td class="col-md-4">
-                    <div class="io-line">Defined in <a href="" data-line="71"
-                            class="link-to-prism">src/challenge/challenge.service.ts:71</a></div>
+                    <div class="io-line">Defined in <a href="" data-line="75"
+                            class="link-to-prism">src/challenge/challenge.service.ts:75</a></div>
                 </td>
             </tr>
 
@@ -411,6 +411,10 @@ export class ChallengeService {
             .then((data: string) &#x3D;&gt; {
               if (toml.parse(data).SIGNING_KEY) {
                 return toml.parse(data).SIGNING_KEY;
+              } else {
+                throw new BadRequestException(
+                  &quot;Unable to fetch &#x27;client_domain&#x27; SIGNING_KEY&quot;,
+                );
               }
             })
         : null;
@@ -441,17 +445,31 @@ export class ChallengeService {
     this.logger.debug(&#x27;client_domain:&#x27; + challenge.client_domain);
     this.logger.debug(&#x27;Memo: &#x27; + challenge.memo);
 
-    // TODO: Add client_domain support when this gets added: https://github.com/stellar/js-stellar-sdk/issues/668
-    const transaction &#x3D; StellarSdk.Utils.buildChallengeTx(
-      this.configService.get(&#x27;source.keypair&#x27;),
-      challenge.account,
-      challenge.home_domain || this.configService.get(&#x27;homeDomain&#x27;),
-      300,
-      this.configService.get(&#x27;networkPassphrase&#x27;),
-      this.configService.get(&#x27;homeDomain&#x27;) + &#x27;/auth&#x27;,
-      challenge.memo,
-    );
+    let transaction;
 
+    if (challenge.client_domain) {
+      transaction &#x3D; StellarSdk.Utils.buildChallengeTx(
+        this.configService.get(&#x27;source.keypair&#x27;),
+        challenge.account,
+        challenge.home_domain || this.configService.get(&#x27;homeDomain&#x27;),
+        300,
+        this.configService.get(&#x27;networkPassphrase&#x27;),
+        this.configService.get(&#x27;homeDomain&#x27;),
+        challenge.memo,
+        challenge.client_domain,
+        client_domain_signing_key.toString(),
+      );
+    } else {
+      transaction &#x3D; StellarSdk.Utils.buildChallengeTx(
+        this.configService.get(&#x27;source.keypair&#x27;),
+        challenge.account,
+        challenge.home_domain || this.configService.get(&#x27;homeDomain&#x27;),
+        300,
+        this.configService.get(&#x27;networkPassphrase&#x27;),
+        this.configService.get(&#x27;homeDomain&#x27;),
+        challenge.memo,
+      );
+    }
     return {
       transaction: transaction,
       network_passphrase: this.configService.get(&#x27;networkPassphrase&#x27;),
@@ -487,6 +505,15 @@ export class ChallengeService {
                <!-- END CONTENT -->
            </div>
        </div>
+
+          <label class="dark-mode-switch">
+               <input type="checkbox">
+               <span class="slider">
+                    <svg class="slider-icon" viewBox="0 0 24 24" fill="none" height="20" stroke="#000" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" width="20" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path>
+                    </svg>
+               </span>
+          </label>
 
        <script>
             var COMPODOC_CURRENT_PAGE_DEPTH = 1;
