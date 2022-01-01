@@ -9,7 +9,7 @@ import {
   ChallengeResponseModel,
   DefaultResponseModel,
   TokenResponseModel,
-} from 'src/responseModels';
+} from '../responseModels';
 StellarSdk.Networks.TESTNET;
 
 export type ChallengeResponse =

@@ -9,7 +9,6 @@ import {
 } from 'class-validator';
 import { isEd25519, isNotMuxedAccount } from './CustomValidators';
 import * as dotenv from 'dotenv';
-import { ChallengeResponse } from './auth/auth.controller';
 
 dotenv.config();
 // TODO: get home domain from config module
@@ -59,6 +58,4 @@ export class Challenge {
   @IsFQDN()
   @IsOptional()
   readonly client_domain?: string;
-
-  results: ChallengeResponse;
 }
