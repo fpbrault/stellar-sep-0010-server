@@ -198,8 +198,20 @@ export class hasValidSignatures implements ValidatorConstraintInterface {
       const server: StellarSdk.Server = new StellarSdk.Server(
         this.configService.get('horizonServer'),
       );
+
+      let accountPublicKey: string;
+      if (xdr.operations[0].source.startsWith('M')) {
+        accountPublicKey = StellarSdk.MuxedAccount.fromAddress(
+          xdr.operations[0].source,
+          '6',
+        )
+          .baseAccount()
+          .accountId();
+      } else {
+        accountPublicKey = xdr.operations[0].source;
+      }
       // Retrieve the Client Account to check thresholds and signature weights.
-      const clientAccount = await server.loadAccount(xdr.operations[0].source);
+      const clientAccount = await server.loadAccount(accountPublicKey);
 
       const homeDomain = this.configService.get('homeDomain');
 
