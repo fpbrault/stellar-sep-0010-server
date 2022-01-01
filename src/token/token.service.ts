@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Token } from '../token';
+import { TokenDto } from '../token';
 import * as StellarSdk from 'stellar-sdk';
 import * as jwt from 'jsonwebtoken';
 import { MemoNone } from 'stellar-sdk';
@@ -29,11 +29,11 @@ export class TokenService {
   /**
    * generateToken takes a (previously validated) challenge XDR and returns a JTW token.
    *
-   * @param {Token} token
+   * @param {TokenDto} token
    * @return {Promise<TokenResponse>}
    * @memberof TokenService
    */
-  async generateToken(token: Token): Promise<TokenResponse> {
+  async generateToken(token: TokenDto): Promise<TokenResponse> {
     let transaction: StellarSdk.Transaction<
       StellarSdk.Memo<StellarSdk.MemoType>,
       StellarSdk.Operation[]

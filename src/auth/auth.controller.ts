@@ -1,19 +1,25 @@
-import { Body, Controller, Get, Query, Post } from '@nestjs/common';
+import { Body, Controller, Get, Query, Post, HttpCode } from '@nestjs/common';
 import * as StellarSdk from 'stellar-sdk';
 import { ChallengeService } from '../challenge/challenge.service';
 import { TokenService } from '../token/token.service';
 import { Challenge } from '../challenge';
-import { Token } from '../token';
+import { TokenDto } from '../token';
+import { ApiDefaultResponse, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ChallengeResponseModel,
+  DefaultResponseModel,
+  TokenResponseModel,
+} from 'src/responseModels';
 StellarSdk.Networks.TESTNET;
 
-type ChallengeResponse =
+export type ChallengeResponse =
   | {
       transaction: string;
       network_passphrase: string;
     }
   | string;
 
-type TokenResponse =
+export type TokenResponse =
   | {
       token: string;
     }
@@ -34,6 +40,14 @@ export class AuthController {
    * @memberof AuthController
    */
   @Get()
+  @ApiResponse({
+    status: 200,
+    type: ChallengeResponseModel,
+    description:
+      'A challenge transaction has been generated and is ready to be signed.',
+  })
+  @ApiOperation({ summary: 'Generates a SEP-0010 challenge.' })
+  @ApiDefaultResponse({ type: DefaultResponseModel })
   async generateChallenge(
     @Query() challenge: Challenge,
   ): Promise<ChallengeResponse> {
@@ -43,12 +57,24 @@ export class AuthController {
   /**
    *  generateToken takes a challenge XDR and returns a JTW token.
    *
-   * @param {Token} token
+   * @param {TokenDto} token
    * @return {Promise<TokenResponse>}
    * @memberof AuthController
    */
   @Post()
-  async generateToken(@Body() token: Token): Promise<TokenResponse> {
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: TokenResponseModel,
+    description:
+      'The transaction is valid and contains all required signatures.',
+  })
+  @ApiOperation({
+    summary:
+      'Takes a challenge XDR and returns a JTW token if valid and signed.',
+  })
+  @ApiDefaultResponse({ type: DefaultResponseModel })
+  async generateToken(@Body() token: TokenDto): Promise<TokenResponse> {
     return this.tokenService.generateToken(token);
   }
 }
